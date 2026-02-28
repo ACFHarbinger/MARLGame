@@ -9,7 +9,7 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
 | **1** | **Foundation & Architecture** | **DONE** | Week 2            |
 | **2** | **Twin Stick MARL**           | **DONE** | Week 5            |
 | **3** | **Strategy MARL**             | **DONE** | Week 8            |
-| 4     | C++ LibTorch Integration      | PLANNED  | Week 11           |
+| **4** | **C++ LibTorch Integration**  | **DONE** | Week 11           |
 | 5     | Training Infrastructure       | PLANNED  | Week 13           |
 | 6     | Advanced Features             | PLANNED  | Week 16           |
 | 7     | Deployment & Evaluation       | PLANNED  | Week 18           |
@@ -58,14 +58,26 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
   - [x] Formations and tactical behaviors
   - [x] Shared team observations structure
 
-### Phase 4: C++ LibTorch Integration (Weeks 9-11) [PLANNED]
+### Phase 4: C++ LibTorch Integration (Weeks 9-11) [DONE]
 
-- [ ] **Week 9: Environment Wrapper**
-  - [ ] High-performance C++ wrapper for UE environment
-- [ ] **Week 10: Training Implementation**
-  - [ ] MAPPO/PPO algorithm implementation in LibTorch
-- [ ] **Week 11: Logging & Optimization**
-  - [ ] TensorBoard C++ integration
+- [x] **Week 9: Environment Wrapper**
+  - [x] `UMARLTrainingEnvironment` - Gym-like interface for UE
+  - [x] Tensor conversion utilities (UE ↔ LibTorch)
+  - [x] Reset/Step methods with `torch::Tensor` support
+  - [x] Episode management and done flags
+- [x] **Week 10: Training Implementation**
+  - [x] `MLP`, `ActorNetwork`, `CriticNetwork`, `CentralizedCriticNetwork`
+  - [x] `PPOAlgorithm` - Full PPO implementation in C++
+  - [x] `MAPPOAlgorithm` - Multi-agent PPO with centralized critic
+  - [x] GAE advantage computation
+  - [x] Rollout buffer and mini-batch training
+  - [x] Model save/load functionality
+- [x] **Week 11: Build System & Documentation**
+  - [x] LibTorch integration in `MARLPlugin.Build.cs`
+  - [x] Cross-platform support (Linux, Windows, Mac)
+  - [x] CUDA/CPU device selection
+  - [x] `README_PHASE4.md` with comprehensive examples
+  - [x] Usage documentation and troubleshooting guide
 
 ### Phase 5: Training Infrastructure (Weeks 12-13) [PLANNED]
 
