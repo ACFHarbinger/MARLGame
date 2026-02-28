@@ -11,7 +11,7 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
 | **3** | **Strategy MARL**             | **DONE** | Week 8            |
 | **4** | **C++ LibTorch Integration**  | **DONE** | Week 11           |
 | **5** | **Training Infrastructure**   | **DONE** | Week 13           |
-| 6     | Advanced Features             | PLANNED  | Week 16           |
+| 6     | Advanced Features             | DONE     | Week 16           |
 | 7     | Deployment & Evaluation       | PLANNED  | Week 18           |
 
 ---
@@ -88,11 +88,11 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
   - [x] Implement `UMARLCurriculumManager`
   - [x] Model save/load with optimizer states and periodic evaluation
 
-### Phase 6: Advanced Features (Weeks 14-16) [PLANNED]
+### Phase 6: Advanced Features (Weeks 14-16) [DONE]
 
-- [ ] **Week 14: Agent Communication** (CommNet/TarMAC)
-- [ ] **Week 15: Self-Play & League Training**
-- [ ] **Week 16: Transfer Learning**
+- [x] **Week 14: Agent Communication** (CommNet/TarMAC)
+- [x] **Week 15: Self-Play & League Training**
+- [x] **Week 16: Transfer Learning**
 
 ### Phase 7: Deployment & Evaluation (Weeks 17-18) [PLANNED]
 

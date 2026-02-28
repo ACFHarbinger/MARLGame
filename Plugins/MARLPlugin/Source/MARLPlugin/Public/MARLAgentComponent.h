@@ -35,11 +35,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category="MARL")
 	void ExecuteAction(const FMARLAction& Action);
 
+	/** Returns the accumulated reward and resets it if requested */
 	UFUNCTION(BlueprintCallable, Category="MARL")
-	float GetAccumulatedReward() const { return AccumulatedReward; }
+	float ConsumeReward();
 
 	UFUNCTION(BlueprintCallable, Category="MARL")
 	void AddReward(float Reward);
+
+	/** Gets the last message this agent broadcasted to its team */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MARL|Communication")
+	TArray<float> OutboundMessage;
+
+	/** Sets the incoming messages from teammates for the current step */
+	UFUNCTION(BlueprintCallable, Category="MARL|Communication")
+	void SetIncomingMessages(const TArray<float>& Messages);
+
+	/** Gets the concatenated incoming messages from teammates */
+	UFUNCTION(BlueprintPure, Category="MARL|Communication")
+	TArray<float> GetIncomingMessages() const;
 
 	UFUNCTION(BlueprintCallable, Category="MARL")
 	void ResetAgent();
@@ -48,7 +61,11 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	float AccumulatedReward = 0.0f;
+	// Current episodic reward
+	float CurrentReward = 0.0f;
+
+	// Incoming messages from teammates
+	TArray<float> IncomingMessages;
 
 	UPROPERTY(Transient)
 	TArray<UMARLSensorComponent*> Sensors;

@@ -44,6 +44,16 @@ void UMARLAgentComponent::AddReward(float Reward)
 	AccumulatedReward += Reward;
 }
 
+void UMARLAgentComponent::SetIncomingMessages(const TArray<float>& Messages)
+{
+	IncomingMessages = Messages;
+}
+
+TArray<float> UMARLAgentComponent::GetIncomingMessages() const
+{
+	return IncomingMessages;
+}
+
 void UMARLAgentComponent::ResetAgent()
 {
 	AccumulatedReward = 0.0f;
