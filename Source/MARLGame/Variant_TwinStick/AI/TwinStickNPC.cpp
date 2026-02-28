@@ -49,6 +49,28 @@ void ATwinStickNPC::BeginPlay()
 		GM->IncreaseNPCs();
 	}
 
+	// Disable default AI if RL controlled
+	if (bIsRLControlled && Controller)
+	{
+		Controller->UnPossess();
+	}
+}
+
+void ATwinStickNPC::ApplyAction_Implementation(const FMARLAction& Action)
+{
+	if (!bIsRLControlled) return;
+
+	// Continuous Action Mapping for 2D Movement
+	if (Action.ContinuousActions.Num() >= 2)
+	{
+		FVector MoveDir(Action.ContinuousActions[0], Action.ContinuousActions[1], 0.0f);
+		AddMovementInput(MoveDir);
+
+		if (!MoveDir.IsNearlyZero())
+		{
+			SetActorRotation(MoveDir.Rotation());
+		}
+	}
 }
 
 void ATwinStickNPC::EndPlay(EEndPlayReason::Type EndPlayReason)

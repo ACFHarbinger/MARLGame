@@ -639,13 +639,13 @@ if (bWon) {
    │       ├── Public/
    │       │   ├── MARLAgentComponent.h
    │       │   ├── MARLEnvironmentManager.h
-   │       │   ├── MARLNetworkInterface.h
+   │       │   ├── MARLLibTorchInterface.h
    │       │   ├── MARLTypes.h
    │       │   └── MARLSensorComponent.h
    │       └── Private/
    │           ├── MARLAgentComponent.cpp
    │           ├── MARLEnvironmentManager.cpp
-   │           ├── MARLNetworkInterface.cpp
+   │           ├── MARLLibTorchInterface.cpp
    │           └── MARLSensorComponent.cpp
    ├── MARLPlugin.uplugin
    └── Resources/
@@ -655,11 +655,6 @@ if (bWon) {
 
    ```csharp
    PublicDependencyModuleNames.AddRange(new string[] {
-       "Sockets",        // Network communication
-       "Networking",     // High-level networking
-       "HTTP",           // HTTP requests
-       "Json",           // JSON serialization
-       "JsonUtilities",  // JSON helpers
        "Core", "CoreUObject", "Engine"
    });
    ```
@@ -676,11 +671,11 @@ if (bWon) {
    - Global state tracking
    - Multi-agent synchronization
 
-5. Implement `UMARLNetworkInterface`
-   - TCP server socket creation
-   - JSON message parsing
-   - Asynchronous message handling
-   - Connection management
+5. Implement `UMARLLibTorchInterface`
+   - IPC server or Shared memory creation
+   - Tensor data serialization and access
+   - Asynchronous tensor handling
+   - Inter-process synchronization
 
 **Deliverables:**
 

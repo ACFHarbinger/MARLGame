@@ -44,3 +44,42 @@ struct FMARLObservationSpace
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
 	int32 Size = 0;
 };
+
+USTRUCT(BlueprintType)
+struct FMARLActionSpace
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	EMARLActionSpace Type = EMARLActionSpace::Discrete;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	int32 Size = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FMARLResetConfig
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	bool bRandomizeSpawn = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	float SpawnRadius = 500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	int32 InitialEnemies = 5;
+};
+
+USTRUCT(BlueprintType)
+struct FMARLTeamObservation
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	TArray<float> TeamMeanPosition;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	int32 ActiveUnits = 0;
+};

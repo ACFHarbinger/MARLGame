@@ -33,6 +33,8 @@ void ATwinStickSpawner::BeginPlay()
 
 	}
 
+	SpawnObstacles();
+
 	// set up the spawn timer
 	GetWorld()->GetTimerManager().SetTimer(SpawnGroupTimer, this, &ATwinStickSpawner::SpawnNPCGroup, SpawnGroupDelay, true);
 
@@ -87,4 +89,23 @@ void ATwinStickSpawner::SpawnNPC()
 		GetWorld()->GetTimerManager().SetTimer(SpawnNPCTimer, this, &ATwinStickSpawner::SpawnNPC, FMath::RandRange(MinSpawnDelay, MaxSpawnDelay), false);
 	}
 
+}
+
+void ATwinStickSpawner::SpawnObstacles()
+{
+	if (ObstacleClasses.Num() == 0 || NumObstacles <= 0) return;
+
+	for (int32 i = 0; i < NumObstacles; ++i)
+	{
+		FVector SpawnLoc;
+		if (UNavigationSystemV1::K2_GetRandomReachablePointInRadius(GetWorld(), GetActorLocation(), SpawnLoc, SpawnRadius, NavData))
+		{
+			int32 ClassIndex = FMath::RandRange(0, ObstacleClasses.Num() - 1);
+			if (ObstacleClasses[ClassIndex])
+			{
+				FTransform SpawnTransform(FRotator(0, FMath::RandRange(0.0f, 360.0f), 0), SpawnLoc);
+				GetWorld()->SpawnActor<AActor>(ObstacleClasses[ClassIndex], SpawnTransform);
+			}
+		}
+	}
 }

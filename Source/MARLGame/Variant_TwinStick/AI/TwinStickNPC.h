@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "MARLCharacter.h"
 #include "TwinStickNPC.generated.h"
 
 class ATwinStickPickup;
@@ -15,7 +15,7 @@ class ATwinStickNPCDestruction;
  *  Awards points and randomly spawns pickups on death
  */
 UCLASS(abstract)
-class ATwinStickNPC : public ACharacter
+class ATwinStickNPC : public AMARLCharacter
 {
 	GENERATED_BODY()
 
@@ -50,6 +50,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="NPC")
 	bool bHit = false;
 
+	/** If true, this NPC is controlled by the RL agent rather than the default AI. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	bool bIsRLControlled = false;
+
 public:
 
 	/** Constructor */
@@ -59,6 +63,9 @@ protected:
 
 	/** Gameplay Initialization */
 	virtual void BeginPlay() override;
+
+	/** RL Action Implementation */
+	virtual void ApplyAction_Implementation(const FMARLAction& Action) override;
 
 	/** Gameplay cleanup */
 	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;

@@ -55,6 +55,14 @@ protected:
 	/** Pointer to the recast nav mesh actor, used to provide NPC spawn locations */
 	TObjectPtr<ARecastNavMesh> NavData;
 
+	/** Obstacle classes to spawn in the environment */
+	UPROPERTY(EditAnywhere, Category="Environment")
+	TArray<TSubclassOf<AActor>> ObstacleClasses;
+
+	/** Number of obstacles to spawn at start */
+	UPROPERTY(EditAnywhere, Category="Environment", meta = (ClampMin = 0, ClampMax = 50))
+	int32 NumObstacles = 5;
+
 public:	
 
 	/** Constructor */
@@ -75,5 +83,8 @@ protected:
 
 	/** Spawns an individual NPC */
 	void SpawnNPC();
+
+	/** Spawns random obstacles around the area */
+	void SpawnObstacles();
 
 };

@@ -54,6 +54,32 @@ void ATwinStickCharacter::BeginPlay()
 	UpdateItems();
 }
 
+void ATwinStickCharacter::ApplyAction_Implementation(const FMARLAction& Action)
+{
+	// Discrete Action Mapping
+	// Action[0]: 0=None, 1=Shoot, 2=Dash, 3=AoE
+	if (Action.DiscreteActions.Num() > 0)
+	{
+		int32 MainAction = Action.DiscreteActions[0];
+		switch (MainAction)
+		{
+			case 1: DoShoot(); break;
+			case 2: DoDash(); break;
+			case 3: DoAoEAttack(); break;
+			default: break;
+		}
+	}
+
+	// Continuous Action Mapping
+	// Action[0, 1]: Move X, Y (-1.0 to 1.0)
+	// Action[2, 3]: Aim X, Y (-1.0 to 1.0)
+	if (Action.ContinuousActions.Num() >= 4)
+	{
+		DoMove(Action.ContinuousActions[0], Action.ContinuousActions[1]);
+		DoAim(Action.ContinuousActions[2], Action.ContinuousActions[3]);
+	}
+}
+
 void ATwinStickCharacter::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);

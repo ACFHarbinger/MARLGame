@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "MARLCharacter.h"
 #include "AIController.h"
 #include "StrategyUnit.generated.h"
 
@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitMoveCompletedDelegate, AStrat
  *  Rather than react to inputs, it's controlled indirectly by the Strategy Player Controller
  */
 UCLASS(abstract)
-class AStrategyUnit : public ACharacter
+class AStrategyUnit : public AMARLCharacter
 {
 	GENERATED_BODY()
 
@@ -38,8 +38,11 @@ public:
 	AStrategyUnit();
 
 protected:
-
+	virtual void BeginPlay() override;
 	virtual void NotifyControllerChanged() override;
+
+	/** RL Action implementation */
+	virtual void ApplyAction_Implementation(const FMARLAction& Action) override;
 
 public:
 

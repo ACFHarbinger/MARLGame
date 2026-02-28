@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "MARLCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "TwinStickCharacter.generated.h"
 
@@ -21,7 +21,7 @@ class ATwinStickProjectile;
  *  Fires projectiles and spawns AoE attacks.
  */
 UCLASS(abstract)
-class ATwinStickCharacter : public ACharacter
+class ATwinStickCharacter : public AMARLCharacter
 {
 	GENERATED_BODY()
 
@@ -129,6 +129,9 @@ protected:
 
 	/** Gameplay Initialization */
 	virtual void BeginPlay() override;
+
+	/** RL Action implementation */
+	virtual void ApplyAction_Implementation(const FMARLAction& Action) override;
 
 	/** Gameplay cleanup */
 	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;

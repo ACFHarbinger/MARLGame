@@ -39,6 +39,30 @@ AStrategyUnit::AStrategyUnit()
 	GetCharacterMovement()->SetFixedBrakingDistance(true);
 }
 
+void AStrategyUnit::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AStrategyUnit::ApplyAction_Implementation(const FMARLAction& Action)
+{
+	// Discrete Mapping
+	// Action[0]: 0=None, 1=Stop
+	if (Action.DiscreteActions.Num() > 0 && Action.DiscreteActions[0] == 1)
+	{
+		StopMoving();
+		return;
+	}
+
+	// Continuous Mapping
+	// Action[0, 1]: Target X, Y (World coordinates)
+	if (Action.ContinuousActions.Num() >= 2)
+	{
+		FVector TargetLocation = FVector(Action.ContinuousActions[0], Action.ContinuousActions[1], GetActorLocation().Z);
+		MoveToLocation(TargetLocation, 50.0f);
+	}
+}
+
 void AStrategyUnit::NotifyControllerChanged()
 {
 	// validate and save a copy of the AI controller reference
