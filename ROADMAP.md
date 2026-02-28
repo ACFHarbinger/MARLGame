@@ -10,7 +10,7 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
 | **2** | **Twin Stick MARL**           | **DONE** | Week 5            |
 | **3** | **Strategy MARL**             | **DONE** | Week 8            |
 | **4** | **C++ LibTorch Integration**  | **DONE** | Week 11           |
-| 5     | Training Infrastructure       | PLANNED  | Week 13           |
+| **5** | **Training Infrastructure**   | **DONE** | Week 13           |
 | 6     | Advanced Features             | PLANNED  | Week 16           |
 | 7     | Deployment & Evaluation       | PLANNED  | Week 18           |
 
@@ -79,10 +79,14 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
   - [x] `README_PHASE4.md` with comprehensive examples
   - [x] Usage documentation and troubleshooting guide
 
-### Phase 5: Training Infrastructure (Weeks 12-13) [PLANNED]
+### Phase 5: Training Infrastructure (Weeks 12-13) [DONE]
 
-- [ ] **Week 12: Multi-instance Training**
-- [ ] **Week 13: Curriculum Learning**
+- [x] **Week 12: Multi-instance Training**
+  - [x] Implement `UMARLMultiInstanceManager` for spawning headless instances
+  - [x] Docker configuration (UE Server, Trainer, docker-compose)
+- [x] **Week 13: Checkpointing & Curriculum**
+  - [x] Implement `UMARLCurriculumManager`
+  - [x] Model save/load with optimizer states and periodic evaluation
 
 ### Phase 6: Advanced Features (Weeks 14-16) [PLANNED]
 

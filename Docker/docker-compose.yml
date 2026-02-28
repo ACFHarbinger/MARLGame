@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  marltrainer:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.Trainer
+    environment:
+      - MARLC_ENV_HOST=marlserver
+      - MARLC_ENV_PORT=7000
+    depends_on:
+      - marlserver
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - marlnet
+
+  marlserver:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.UE
+    environment:
+      - PORT=7000
+    command: ["-Port=7000"]
+    expose:
+      - "7000"
+    deploy:
+      replicas: 4 # Run 4 instances of the game server
+    networks:
+      - marlnet
+
+networks:
+  marlnet:
+    driver: bridge

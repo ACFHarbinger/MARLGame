@@ -1,0 +1,23 @@
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy the plugin source, which contains the standalone trainer C++ code
+# Note: This assumes we extract the trainer code into a standalone CMake project later
+COPY Plugins/MARLPlugin/Source/MARLPlugin/Private/Trainer /app/Trainer
+
+# Create build directory and compile
+WORKDIR /app/Trainer/build
+RUN cmake .. -DCMAKE_PREFIX_PATH=`python -c 'import torch;print(torch.utils.cmake_prefix_path)'` && \
+    make -j$(nproc)
+
+# Run the trainer
+ENTRYPOINT ["./MARLTrainer"]

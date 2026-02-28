@@ -1,0 +1,32 @@
+FROM ghcr.io/epicgames/unreal-engine:dev-5.4 AS builder
+
+# Set up project directory
+WORKDIR /project
+COPY . /project
+
+# Build and Cook the project for Linux Server
+RUN /home/ue4/UnrealEngine/Engine/Build/BatchFiles/RunUAT.sh BuildCookRun \
+    -project=/project/MARLGame.uproject \
+    -noP4 \
+    -platform=Linux \
+    -server \
+    -serverconfig=Development \
+    -cook -allmaps -build -stage -pak -archive \
+    -archivedirectory=/project/Packaged
+
+# Minimal runtime image
+FROM ubuntu:22.04
+
+# Install runtime dependencies for Headless UE
+RUN apt-get update && apt-get install -y \
+    libvulkan1 \
+    libglvnd0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy packaged server from builder
+COPY --from=builder /project/Packaged/LinuxServer /app
+WORKDIR /app
+
+# Entrypoint for the headless server
+# We expose the port parameter to allow multiple instances
+ENTRYPOINT ["./MARLGameServer.sh", "-log", "-NoUI", "-RenderOffScreen"]
