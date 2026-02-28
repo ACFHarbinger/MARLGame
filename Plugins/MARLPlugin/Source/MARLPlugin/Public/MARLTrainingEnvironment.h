@@ -39,7 +39,7 @@ public:
 	 * @return Observations for all agents as TMap
 	 */
 	UFUNCTION(BlueprintCallable, Category="MARL|Training")
-	TMap<FString, TArray<float>> Reset();
+	TMap<FString, FMARLFloatArray> Reset();
 
 	/**
 	 * Execute one environment step with the given actions
@@ -51,8 +51,8 @@ public:
 	 * @return True if step succeeded
 	 */
 	UFUNCTION(BlueprintCallable, Category="MARL|Training")
-	bool Step(const TMap<FString, TArray<float>>& Actions,
-	          TMap<FString, TArray<float>>& OutObservations,
+	bool Step(const TMap<FString, FMARLFloatArray>& Actions,
+	          TMap<FString, FMARLFloatArray>& OutObservations,
 	          TMap<FString, float>& OutRewards,
 	          TMap<FString, bool>& OutDones,
 	          TMap<FString, bool>& OutTruncated);
@@ -139,21 +139,21 @@ private:
 	/**
 	 * Convert UE TMap observations to torch tensor
 	 */
-	torch::Tensor ConvertObservationsToTensor(const TMap<FString, TArray<float>>& Observations);
+	torch::Tensor ConvertObservationsToTensor(const TMap<FString, FMARLFloatArray>& Observations);
 
 	/**
 	 * Convert UE TMap actions to torch tensor
 	 */
-	torch::Tensor ConvertActionsToTensor(const TMap<FString, TArray<float>>& Actions);
+	torch::Tensor ConvertActionsToTensor(const TMap<FString, FMARLFloatArray>& Actions);
 
 	/**
 	 * Convert torch tensor to UE TMap observations
 	 */
-	TMap<FString, TArray<float>> ConvertTensorToObservations(const torch::Tensor& Tensor);
+	TMap<FString, FMARLFloatArray> ConvertTensorToObservations(const torch::Tensor& Tensor);
 
 	/**
 	 * Convert torch tensor to UE TMap actions
 	 */
-	TMap<FString, TArray<float>> ConvertTensorToActions(const torch::Tensor& Tensor);
+	TMap<FString, FMARLFloatArray> ConvertTensorToActions(const torch::Tensor& Tensor);
 #endif
 };

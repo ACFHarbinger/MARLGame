@@ -33,14 +33,14 @@ void UMARLLibTorchInterface::ShutdownIPCServer()
 	}
 }
 
-void UMARLLibTorchInterface::SendObservations(const TMap<FString, TArray<float>>& Observations)
+void UMARLLibTorchInterface::SendObservations(const TMap<FString, FMARLFloatArray>& Observations)
 {
 	if (!bIsServerRunning) return;
 	
 	// Convert Unreal arrays to torch::Tensor and send memory
 }
 
-bool UMARLLibTorchInterface::ReceiveActions(TMap<FString, TArray<float>>& OutActions)
+bool UMARLLibTorchInterface::ReceiveActions(TMap<FString, FMARLFloatArray>& OutActions)
 {
 	if (!bIsServerRunning) return false;
 	

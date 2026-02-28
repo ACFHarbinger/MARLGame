@@ -86,7 +86,8 @@ int32 UMARLMultiInstanceManager::GetActiveInstanceCount() const
 	int32 Count = 0;
 	for (const FProcHandle& Handle : ActiveProcessHandles)
 	{
-		if (Handle.IsValid() && FPlatformProcess::IsProcRunning(Handle))
+		FProcHandle MutableHandle = Handle;
+		if (MutableHandle.IsValid() && FPlatformProcess::IsProcRunning(MutableHandle))
 		{
 			Count++;
 		}

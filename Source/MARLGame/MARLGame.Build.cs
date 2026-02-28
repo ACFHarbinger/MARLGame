@@ -20,7 +20,8 @@ public class MARLGame : ModuleRules
 			"GameplayStateTreeModule",
 			"Niagara",
 			"UMG",
-			"Slate"
+			"Slate",
+			"MARLPlugin"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

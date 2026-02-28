@@ -41,7 +41,14 @@ void UMARLAgentComponent::ExecuteAction(const FMARLAction& Action)
 
 void UMARLAgentComponent::AddReward(float Reward)
 {
-	AccumulatedReward += Reward;
+	CurrentReward += Reward;
+}
+
+float UMARLAgentComponent::ConsumeReward()
+{
+	float R = CurrentReward;
+	CurrentReward = 0.0f;
+	return R;
 }
 
 void UMARLAgentComponent::SetIncomingMessages(const TArray<float>& Messages)
@@ -56,5 +63,6 @@ TArray<float> UMARLAgentComponent::GetIncomingMessages() const
 
 void UMARLAgentComponent::ResetAgent()
 {
-	AccumulatedReward = 0.0f;
+	CurrentReward = 0.0f;
+	bIsTerminal = false;
 }

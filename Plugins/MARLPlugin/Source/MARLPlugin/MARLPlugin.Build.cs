@@ -7,9 +7,8 @@ public class MARLPlugin : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		// Enable C++17 for LibTorch compatibility
-		CppStandard = CppStandardVersion.Cpp17;
-		bUseRTTI = true;  // LibTorch requires RTTI
+		// Enable C++20 for UE5.7 compatibility
+		CppStandard = CppStandardVersion.Cpp20;
 		bEnableExceptions = true;  // LibTorch uses exceptions
 
 		PublicDependencyModuleNames.AddRange(

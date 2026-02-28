@@ -26,6 +26,15 @@ public:
 	UPROPERTY(EditAnywhere, Category="MARL")
 	int32 ActionSize = 24;
 
+	UPROPERTY(EditAnywhere, Category="MARL")
+	bool bIsTerminal = false;
+
+	UFUNCTION(BlueprintPure, Category="MARL")
+	const FString& GetAgentID() const { return AgentID; }
+
+	UFUNCTION(BlueprintPure, Category="MARL")
+	bool IsTerminal() const { return bIsTerminal; }
+
 	UPROPERTY(BlueprintAssignable, Category="MARL")
 	FOnActionReceived OnActionReceived;
 
@@ -38,6 +47,9 @@ public:
 	/** Returns the accumulated reward and resets it if requested */
 	UFUNCTION(BlueprintCallable, Category="MARL")
 	float ConsumeReward();
+
+	UFUNCTION(BlueprintPure, Category="MARL")
+	float GetReward() const { return CurrentReward; }
 
 	UFUNCTION(BlueprintCallable, Category="MARL")
 	void AddReward(float Reward);

@@ -33,6 +33,19 @@ struct FMARLAction
 	FMARLAction() {}
 };
 
+/** Wrapper for float arrays to bypass UnrealHeaderTool limitations with nested containers in TMaps */
+USTRUCT(BlueprintType)
+struct FMARLFloatArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MARL")
+	TArray<float> Values;
+
+	FMARLFloatArray() {}
+	FMARLFloatArray(const TArray<float>& InValues) : Values(InValues) {}
+};
+
 USTRUCT(BlueprintType)
 struct FMARLObservationSpace
 {

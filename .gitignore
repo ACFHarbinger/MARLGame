@@ -4,4 +4,7 @@
 /Intermediate
 /Saved
 
+/Plugins/MARLPlugin/Binaries
+/Plugins/MARLPlugin/Intermediate
+
 .vscode

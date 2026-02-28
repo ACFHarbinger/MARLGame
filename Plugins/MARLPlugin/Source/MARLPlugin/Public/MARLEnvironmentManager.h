@@ -25,10 +25,19 @@ public:
 	virtual void ResetEpisode();
 
 	UFUNCTION(BlueprintCallable, Category="MARL")
+	virtual void ResetEnvironment() { ResetEpisode(); }
+
+	UFUNCTION(BlueprintCallable, Category="MARL")
 	virtual void Step(const TMap<FString, FMARLAction>& Actions);
 
 	UFUNCTION(BlueprintCallable, Category="MARL")
+	virtual void StepEnvironment(float DeltaSeconds) {}
+
+	UFUNCTION(BlueprintCallable, Category="MARL")
 	virtual bool IsTerminal() const;
+
+	UFUNCTION(BlueprintPure, Category="MARL")
+	const TArray<UMARLAgentComponent*>& GetAgents() const { return RegisteredAgents; }
 
 protected:
 	virtual void BeginPlay() override;

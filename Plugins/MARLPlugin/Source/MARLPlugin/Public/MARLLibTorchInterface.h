@@ -20,11 +20,11 @@ public:
 
 	// Function to send observations via IPC
 	UFUNCTION(BlueprintCallable, Category="MARL|LibTorch")
-	void SendObservations(const TMap<FString, TArray<float>>& Observations);
+	void SendObservations(const TMap<FString, FMARLFloatArray>& Observations);
 
 	// Function to receive actions via IPC
 	UFUNCTION(BlueprintCallable, Category="MARL|LibTorch")
-	bool ReceiveActions(TMap<FString, TArray<float>>& OutActions);
+	bool ReceiveActions(TMap<FString, FMARLFloatArray>& OutActions);
 
 protected:
 	virtual void BeginPlay() override;

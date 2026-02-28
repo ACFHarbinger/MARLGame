@@ -31,11 +31,11 @@ bool UMARLTrainingEnvironment::Initialize(AMARLEnvironmentManager* InEnvironment
 	return true;
 }
 
-TMap<FString, TArray<float>> UMARLTrainingEnvironment::Reset()
+TMap<FString, FMARLFloatArray> UMARLTrainingEnvironment::Reset()
 {
 	if (!EnvironmentManager)
 	{
-		return TMap<FString, TArray<float>>();
+		return TMap<FString, FMARLFloatArray>();
 	}
 
 	// Reset environment manager
@@ -50,7 +50,7 @@ TMap<FString, TArray<float>> UMARLTrainingEnvironment::Reset()
 	AgentTruncatedFlags.Empty();
 
 	// Collect observations from all agents
-	TMap<FString, TArray<float>> Observations;
+	TMap<FString, FMARLFloatArray> Observations;
 	const TArray<UMARLAgentComponent*>& Agents = EnvironmentManager->GetAgents();
 
 	for (UMARLAgentComponent* Agent : Agents)
@@ -59,7 +59,7 @@ TMap<FString, TArray<float>> UMARLTrainingEnvironment::Reset()
 		{
 			FString AgentID = Agent->GetAgentID();
 			TArray<float> Obs = Agent->CollectObservations();
-			Observations.Add(AgentID, Obs);
+			Observations.Add(AgentID, FMARLFloatArray(Obs));
 
 			// Initialize done flags
 			AgentDoneFlags.Add(AgentID, false);
@@ -72,8 +72,8 @@ TMap<FString, TArray<float>> UMARLTrainingEnvironment::Reset()
 	return Observations;
 }
 
-bool UMARLTrainingEnvironment::Step(const TMap<FString, TArray<float>>& Actions,
-                                     TMap<FString, TArray<float>>& OutObservations,
+bool UMARLTrainingEnvironment::Step(const TMap<FString, FMARLFloatArray>& Actions,
+                                     TMap<FString, FMARLFloatArray>& OutObservations,
                                      TMap<FString, float>& OutRewards,
                                      TMap<FString, bool>& OutDones,
                                      TMap<FString, bool>& OutTruncated)
@@ -94,10 +94,12 @@ bool UMARLTrainingEnvironment::Step(const TMap<FString, TArray<float>>& Actions,
 		{
 			FString AgentID = Agent->GetAgentID();
 
-			if (const TArray<float>* ActionPtr = Actions.Find(AgentID))
+			if (const FMARLFloatArray* ActionPtr = Actions.Find(AgentID))
 			{
 				// Execute action
-				Agent->ExecuteAction(*ActionPtr);
+				FMARLAction ActionRecord;
+				ActionRecord.ContinuousActions = ActionPtr->Values;
+				Agent->ExecuteAction(ActionRecord);
 			}
 		}
 	}
@@ -119,7 +121,7 @@ bool UMARLTrainingEnvironment::Step(const TMap<FString, TArray<float>>& Actions,
 
 			// Collect observation
 			TArray<float> Obs = Agent->CollectObservations();
-			OutObservations.Add(AgentID, Obs);
+			OutObservations.Add(AgentID, FMARLFloatArray(Obs));
 
 			// Get reward
 			float Reward = Agent->GetReward();
@@ -165,7 +167,7 @@ bool UMARLTrainingEnvironment::AreAllAgentsDone() const
 
 torch::Tensor UMARLTrainingEnvironment::ResetTorch()
 {
-	TMap<FString, TArray<float>> Observations = Reset();
+	TMap<FString, FMARLFloatArray> Observations = Reset();
 	return ConvertObservationsToTensor(Observations);
 }
 
@@ -176,10 +178,10 @@ bool UMARLTrainingEnvironment::StepTorch(const torch::Tensor& ActionTensor,
                                           torch::Tensor& OutTruncatedTensor)
 {
 	// Convert tensor to UE actions
-	TMap<FString, TArray<float>> Actions = ConvertTensorToActions(ActionTensor);
+	TMap<FString, FMARLFloatArray> Actions = ConvertTensorToActions(ActionTensor);
 
 	// Execute step
-	TMap<FString, TArray<float>> Observations;
+	TMap<FString, FMARLFloatArray> Observations;
 	TMap<FString, float> Rewards;
 	TMap<FString, bool> Dones;
 	TMap<FString, bool> Truncated;
@@ -230,7 +232,7 @@ bool UMARLTrainingEnvironment::StepTorch(const torch::Tensor& ActionTensor,
 	return true;
 }
 
-torch::Tensor UMARLTrainingEnvironment::ConvertObservationsToTensor(const TMap<FString, TArray<float>>& Observations)
+torch::Tensor UMARLTrainingEnvironment::ConvertObservationsToTensor(const TMap<FString, FMARLFloatArray>& Observations)
 {
 	// Create tensor of shape [num_agents, obs_size]
 	std::vector<float> FlatObs;
@@ -239,9 +241,9 @@ torch::Tensor UMARLTrainingEnvironment::ConvertObservationsToTensor(const TMap<F
 	for (int32 i = 0; i < NumAgents; i++)
 	{
 		FString AgentID = FString::Printf(TEXT("agent_%d"), i);
-		if (const TArray<float>* ObsPtr = Observations.Find(AgentID))
+		if (const FMARLFloatArray* ObsPtr = Observations.Find(AgentID))
 		{
-			for (float Val : *ObsPtr)
+			for (float Val : ObsPtr->Values)
 			{
 				FlatObs.push_back(Val);
 			}
@@ -259,7 +261,7 @@ torch::Tensor UMARLTrainingEnvironment::ConvertObservationsToTensor(const TMap<F
 	return torch::from_blob(FlatObs.data(), {NumAgents, ObservationSize}, torch::kFloat32).clone();
 }
 
-torch::Tensor UMARLTrainingEnvironment::ConvertActionsToTensor(const TMap<FString, TArray<float>>& Actions)
+torch::Tensor UMARLTrainingEnvironment::ConvertActionsToTensor(const TMap<FString, FMARLFloatArray>& Actions)
 {
 	std::vector<float> FlatActions;
 	FlatActions.reserve(NumAgents * ActionSize);
@@ -267,9 +269,9 @@ torch::Tensor UMARLTrainingEnvironment::ConvertActionsToTensor(const TMap<FStrin
 	for (int32 i = 0; i < NumAgents; i++)
 	{
 		FString AgentID = FString::Printf(TEXT("agent_%d"), i);
-		if (const TArray<float>* ActionPtr = Actions.Find(AgentID))
+		if (const FMARLFloatArray* ActionPtr = Actions.Find(AgentID))
 		{
-			for (float Val : *ActionPtr)
+			for (float Val : ActionPtr->Values)
 			{
 				FlatActions.push_back(Val);
 			}
@@ -286,9 +288,9 @@ torch::Tensor UMARLTrainingEnvironment::ConvertActionsToTensor(const TMap<FStrin
 	return torch::from_blob(FlatActions.data(), {NumAgents, ActionSize}, torch::kFloat32).clone();
 }
 
-TMap<FString, TArray<float>> UMARLTrainingEnvironment::ConvertTensorToObservations(const torch::Tensor& Tensor)
+TMap<FString, FMARLFloatArray> UMARLTrainingEnvironment::ConvertTensorToObservations(const torch::Tensor& Tensor)
 {
-	TMap<FString, TArray<float>> Observations;
+	TMap<FString, FMARLFloatArray> Observations;
 
 	// Ensure tensor is on CPU and contiguous
 	torch::Tensor CpuTensor = Tensor.to(torch::kCPU).contiguous();
@@ -305,15 +307,15 @@ TMap<FString, TArray<float>> UMARLTrainingEnvironment::ConvertTensorToObservatio
 			Obs.Add(Data[i * ObservationSize + j]);
 		}
 
-		Observations.Add(AgentID, Obs);
+		Observations.Add(AgentID, FMARLFloatArray(Obs));
 	}
 
 	return Observations;
 }
 
-TMap<FString, TArray<float>> UMARLTrainingEnvironment::ConvertTensorToActions(const torch::Tensor& Tensor)
+TMap<FString, FMARLFloatArray> UMARLTrainingEnvironment::ConvertTensorToActions(const torch::Tensor& Tensor)
 {
-	TMap<FString, TArray<float>> Actions;
+	TMap<FString, FMARLFloatArray> Actions;
 
 	// Ensure tensor is on CPU and contiguous
 	torch::Tensor CpuTensor = Tensor.to(torch::kCPU).contiguous();
@@ -330,7 +332,7 @@ TMap<FString, TArray<float>> UMARLTrainingEnvironment::ConvertTensorToActions(co
 			Action.Add(Data[i * ActionSize + j]);
 		}
 
-		Actions.Add(AgentID, Action);
+		Actions.Add(AgentID, FMARLFloatArray(Action));
 	}
 
 	return Actions;

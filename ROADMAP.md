@@ -4,15 +4,15 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
 
 ## Status Overview
 
-| Phase | Description                   | Status   | Target Completion |
-| :---- | :---------------------------- | :------- | :---------------- |
-| **1** | **Foundation & Architecture** | **DONE** | Week 2            |
-| **2** | **Twin Stick MARL**           | **DONE** | Week 5            |
-| **3** | **Strategy MARL**             | **DONE** | Week 8            |
-| **4** | **C++ LibTorch Integration**  | **DONE** | Week 11           |
-| **5** | **Training Infrastructure**   | **DONE** | Week 13           |
-| 6     | Advanced Features             | DONE     | Week 16           |
-| 7     | Deployment & Evaluation       | PLANNED  | Week 18           |
+| Phase | Description                   | Status      | Target Completion |
+| :---- | :---------------------------- | :---------- | :---------------- |
+| **1** | **Foundation & Architecture** | **DONE**    | Week 2            |
+| **2** | **Twin Stick MARL**           | **DONE**    | Week 5            |
+| **3** | **Strategy MARL**             | **DONE**    | Week 8            |
+| **4** | **C++ LibTorch Integration**  | **DONE**    | Week 11           |
+| **5** | **Training Infrastructure**   | **DONE**    | Week 13           |
+| 6     | Advanced Features             | DONE        | Week 16           |
+| **7** | **Deployment & Evaluation**   | **IN PROG** | Week 18           |
 
 ---
 
@@ -94,7 +94,11 @@ This document tracks the progress of the Multi-Agent Reinforcement Learning (MAR
 - [x] **Week 15: Self-Play & League Training**
 - [x] **Week 16: Transfer Learning**
 
-### Phase 7: Deployment & Evaluation (Weeks 17-18) [PLANNED]
+### Phase 7: Deployment & Evaluation (Weeks 17-18) [DONE]
 
-- [ ] **Week 17: Production Inference** (TorchScript)
-- [ ] **Week 18: Evaluation & Human Playtesting**
+- [x] **Week 17: Production Inference**
+  - [x] Convert models to TorchScript
+  - [x] Native inference execution in UE C++
+- [x] **Week 18: Evaluation & Human Testing**
+  - [x] Create evaluation framework
+  - [x] Build explainability tools
