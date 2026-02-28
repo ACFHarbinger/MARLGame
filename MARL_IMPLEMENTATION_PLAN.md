@@ -1,4 +1,5 @@
 # Multi-Agent Reinforcement Learning Implementation Plan
+
 ## MARLGame - Unreal Engine 5.7 Project
 
 **Document Version:** 1.0
@@ -32,10 +33,10 @@ This document outlines a comprehensive plan to integrate Multi-Agent Reinforceme
 ### Key Objectives
 
 - **Primary Goal:** Enable multiple AI agents to learn cooperative and competitive behaviors through reinforcement learning
-- **Architecture:** Hybrid C++/Python system with real-time communication between UE5 and ML frameworks
+- **Architecture:** Pure C++ system utilizing LibTorch directly integrated or via high-performance IPC
 - **Timeline:** 18-week phased implementation
-- **Target Algorithms:** PPO, MADDPG, MAPPO, QMIX, and custom communication-based approaches
-- **Deployment:** Both embedded inference (ONNX) and remote server-based inference
+- **Target Algorithms:** PPO, MADDPG, MAPPO, QMIX, and custom communication-based approaches (C++)
+- **Deployment:** Native LibTorch inference within Unreal Engine
 
 ### Success Criteria
 
@@ -54,6 +55,7 @@ This document outlines a comprehensive plan to integrate Multi-Agent Reinforceme
 The MARLGame project currently contains:
 
 #### Project Structure
+
 ```
 MARLGame/
 ├── Source/MARLGame/
@@ -92,6 +94,7 @@ MARLGame/
 ```
 
 #### Current Dependencies (MARLGame.Build.cs)
+
 - Core, CoreUObject, Engine, InputCore
 - EnhancedInput (Enhanced Input System)
 - AIModule, NavigationSystem
@@ -101,6 +104,7 @@ MARLGame/
 ### 2.2 Twin Stick Variant Analysis
 
 **Game Mechanics:**
+
 - Top-down twin-stick shooter
 - Player controls: Movement (WASD), Aim (Mouse/Right Stick), Shoot, Dash, AoE Attack
 - Enemy NPCs spawn and chase the player
@@ -109,11 +113,13 @@ MARLGame/
 - Health and damage system
 
 **Current AI Implementation:**
+
 - StateTree-based behavior for NPCs (`TwinStickAIController`)
 - Simple chase and attack behaviors
 - Spawner system with NPC cap (configurable, default 20)
 
 **MARL Potential:**
+
 - **Cooperative:** Multiple agents defend against NPC waves
 - **Competitive:** Agent vs agent arena combat
 - **Mixed:** Team vs team scenarios
@@ -121,33 +127,36 @@ MARLGame/
 ### 2.3 Strategy Variant Analysis
 
 **Game Mechanics:**
+
 - Top-down RTS-style unit control
 - Click-to-select units, right-click to move
 - Unit interactions and formations
 - AI pathfinding via NavigationSystem
 
 **Current AI Implementation:**
+
 - `AIController` for pathfinding
 - Basic move-to-location commands
 - Unit selection and interaction system
 
 **MARL Potential:**
+
 - **Resource gathering:** Cooperative unit coordination
 - **Territory control:** Multi-agent spatial coverage
 - **Combat tactics:** Formation and flanking strategies
 
 ### 2.4 Gaps & Requirements for MARL
 
-| Component | Current State | Required for MARL |
-|-----------|---------------|-------------------|
-| **Agent Control** | Human input / StateTree | RL policy-based actions |
-| **Observations** | Game state (internal) | Structured observation vectors/images |
-| **Rewards** | Score system (UI only) | Per-agent reward signals |
-| **Communication** | None | TCP/UDP server for Python |
-| **Serialization** | UE assets | JSON/Binary protocol |
-| **Episode Management** | Continuous gameplay | Reset, step, terminal states |
-| **Parallel Environments** | Single instance | Multi-process support |
-| **Inference** | N/A | Neural network execution |
+| Component                 | Current State           | Required for MARL                     |
+| ------------------------- | ----------------------- | ------------------------------------- |
+| **Agent Control**         | Human input / StateTree | RL policy-based actions               |
+| **Observations**          | Game state (internal)   | Structured observation vectors/images |
+| **Rewards**               | Score system (UI only)  | Per-agent reward signals              |
+| **Communication**         | None                    | IPC or Direct Memory for LibTorch     |
+| **Serialization**         | UE assets               | JSON/Binary protocol                  |
+| **Episode Management**    | Continuous gameplay     | Reset, step, terminal states          |
+| **Parallel Environments** | Single instance         | Multi-process support                 |
+| **Inference**             | N/A                     | Neural network execution              |
 
 ---
 
@@ -202,35 +211,35 @@ MARLGame/
 │  │            Network Communication Layer                        │  │
 │  │                                                               │  │
 │  │  ┌────────────────────────────────────────────────────────┐  │  │
-│  │  │ UMARLNetworkInterface                                  │  │  │
-│  │  │ ├─ TCP Server (Python ML Framework)                   │  │  │
-│  │  │ ├─ UDP Broadcast (Multi-instance coordination)        │  │  │
-│  │  │ ├─ JSON Serialization                                 │  │  │
-│  │  │ └─ Message Queue (Async handling)                     │  │  │
+│  │  │ UMARLLibTorchInterface                                 │  │  │
+│  │  │ ├─ IPC Server (C++ ML Framework)                      │  │  │
+│  │  │ ├─ Shared Memory / Direct API calls                   │  │  │
+│  │  │ ├─ Tensor Serialization                               │  │  │
+│  │  │ └─ Async Worker Threads                               │  │  │
 │  │  └────────────────────────────────────────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 │                                                                     │
 │  ┌──────────────────────────────────────────────────────────────┐  │
-│  │         Inference Engine (Optional - Deployment)              │  │
+│  │         Inference Engine (Embedded Deployment)                │  │
 │  │  ┌────────────────────────────────────────────────────────┐  │  │
-│  │  │ Neural Network Runtime                                 │  │  │
-│  │  │ ├─ ONNX Runtime (Cross-platform)                      │  │  │
-│  │  │ ├─ UE Neural Network Engine (NNE)                     │  │  │
-│  │  │ └─ TensorFlow Lite (Mobile)                           │  │  │
+│  │  │ LibTorch Runtime                                       │  │  │
+│  │  │ ├─ UE C++ LibTorch Integration                        │  │  │
+│  │  │ ├─ Optimized JIT models (TorchScript)                 │  │  │
+│  │  │ └─ Hardware Acceleration (CUDA/DirectML)              │  │  │
 │  │  └────────────────────────────────────────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────────┘  │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
-                             │ Network Protocol (TCP/UDP)
-                             │ JSON Messages
+                             │ Direct Memory Access / fast IPC
+                             │ LibTorch Tensors
                              │
 ┌────────────────────────────▼────────────────────────────────────────┐
-│                   PYTHON ML FRAMEWORK                               │
+│                   C++ ML FRAMEWORK (LibTorch)                       │
 │                                                                     │
 │  ┌──────────────────────────────────────────────────────────────┐  │
 │  │           Environment Interface Layer                         │  │
 │  │  ┌────────────────────────────────────────────────────────┐  │  │
-│  │  │ UnrealEnv (Gymnasium/PettingZoo Interface)             │  │  │
+│  │  │ UnrealEnv (C++ RL Interface)                           │  │  │
 │  │  │ ├─ Multi-agent observation spaces                      │  │  │
 │  │  │ ├─ Multi-agent action spaces                           │  │  │
 │  │  │ ├─ Reward distribution                                 │  │  │
@@ -280,7 +289,8 @@ MARLGame/
 
 #### Message Format (JSON)
 
-**Reset Request (Python → UE)**
+**Reset Request (C++ ML → UE)**
+
 ```json
 {
   "type": "reset",
@@ -293,7 +303,8 @@ MARLGame/
 }
 ```
 
-**Reset Response (UE → Python)**
+**Reset Response (UE → C++ ML)**
+
 ```json
 {
   "type": "reset_response",
@@ -310,7 +321,8 @@ MARLGame/
 }
 ```
 
-**Step Request (Python → UE)**
+**Step Request (C++ ML → UE)**
+
 ```json
 {
   "type": "step",
@@ -323,7 +335,8 @@ MARLGame/
 }
 ```
 
-**Step Response (UE → Python)**
+**Step Response (UE → C++ ML)**
+
 ```json
 {
   "type": "step_response",
@@ -362,8 +375,8 @@ MARLGame/
 - **Port Configuration:** Configurable, default 9876 (TCP), 9877 (UDP)
 - **Serialization:** JSON for development, MessagePack/Protobuf for production
 - **Connection Model:**
-  - Single Python client controls all agents (centralized training)
-  - Multiple Python clients for distributed training (advanced)
+  - Single C++ client controls all agents (centralized training)
+  - Multiple C++ clients for distributed training (advanced)
 - **Heartbeat:** 5-second keepalive to detect disconnections
 - **Timeout:** 30-second action timeout before environment reset
 
@@ -405,6 +418,7 @@ public:
 #### Twin Stick Shooter Observations
 
 **Vector Observation (Recommended for initial implementation)**
+
 - **Agent State (7 values):**
   - Position (X, Y) - normalized to [0, 1]
   - Velocity (VX, VY) - normalized
@@ -432,6 +446,7 @@ public:
 **Total Vector Size:** 7 + 96 + 20 + 5 = **128 dimensions**
 
 **Visual Observation (Optional for CNN policies)**
+
 - 84×84 RGB top-down camera
 - 4-frame stack for temporal information
 - Shape: (4, 84, 84, 3) or (4, 3, 84, 84) depending on framework
@@ -439,6 +454,7 @@ public:
 #### Strategy Game Observations
 
 **Vector Observation (Hierarchical)**
+
 - **Unit-level State (12 values per unit):**
   - Position, velocity, rotation (6)
   - Health, morale, experience (3)
@@ -455,6 +471,7 @@ public:
   - Time remaining
 
 **Graph-based Observation (Advanced)**
+
 - Node features: Each unit as a node with state vector
 - Edge features: Distance, visibility, communication channel
 - Enables Graph Neural Network policies
@@ -464,6 +481,7 @@ public:
 #### Twin Stick Shooter Actions
 
 **Option 1: Discrete Action Space (Simpler)**
+
 - Total actions: **24**
   - Movement: 9 (8 directions + no-move)
   - Aim: 8 (cardinal + diagonal directions)
@@ -471,6 +489,7 @@ public:
   - Combined: MultiDiscrete([9, 8, 3])
 
 **Option 2: Continuous Action Space (More expressive)**
+
 - Total dimensions: **7**
   - Move X: [-1, 1]
   - Move Y: [-1, 1]
@@ -481,12 +500,14 @@ public:
   - AoE: [0, 1]
 
 **Option 3: Hybrid (Recommended)**
+
 - Continuous: Movement and aim (4D)
 - Discrete: Abilities (shoot/dash/AoE as binary flags)
 
 #### Strategy Game Actions
 
 **Hierarchical Action Space**
+
 - **High-level (Strategic):**
   - Goal selection: Attack, Defend, Scout, Gather
   - Target selection: Which area/enemy
@@ -501,6 +522,7 @@ public:
 #### Twin Stick Shooter Rewards
 
 **Dense Rewards (Frequent feedback)**
+
 ```cpp
 // Per-timestep rewards
 float reward = 0.0f;
@@ -527,6 +549,7 @@ if (bItemCollected) {
 ```
 
 **Sparse Rewards (Event-based)**
+
 ```cpp
 // Enemy killed
 reward += 50.0f * ComboMultiplier;
@@ -548,6 +571,7 @@ if (ComboMultiplier > PreviousCombo) {
 ```
 
 **Team Rewards (Cooperative scenarios)**
+
 ```cpp
 // Shared score bonus
 float teamReward = TeamScore * 0.01f;
@@ -604,7 +628,9 @@ if (bWon) {
 #### Week 1: Plugin Setup & Core Infrastructure
 
 **Tasks:**
+
 1. Create MARL Plugin structure
+
    ```bash
    # Plugin directory structure
    Plugins/MARLPlugin/
@@ -626,6 +652,7 @@ if (bWon) {
    ```
 
 2. Update Build.cs dependencies
+
    ```csharp
    PublicDependencyModuleNames.AddRange(new string[] {
        "Sockets",        // Network communication
@@ -656,13 +683,15 @@ if (bWon) {
    - Connection management
 
 **Deliverables:**
+
 - Compiled MARLPlugin
-- Basic network echo test (Python ↔ UE)
+- Basic network echo test (C++ ML ↔ UE)
 - Documentation for plugin API
 
 #### Week 2: Sensor System & Configuration
 
 **Tasks:**
+
 1. Create sensor system
    - `UMARLRaycastSensor`: 360° raycasting for spatial awareness
    - `UMARLCameraSensor`: Visual observations from cameras
@@ -684,6 +713,7 @@ if (bWon) {
    - Reward signal plotting
 
 **Deliverables:**
+
 - Functional sensor components
 - Configuration system with examples
 - Debug UI showing live observations
@@ -695,7 +725,9 @@ if (bWon) {
 #### Week 3: Basic Agent Integration
 
 **Tasks:**
+
 1. Extend `ATwinStickCharacter`
+
    ```cpp
    UCLASS()
    class ATwinStickCharacter : public ACharacter
@@ -728,12 +760,14 @@ if (bWon) {
    - Team reward distribution
 
 **Testing:**
+
 - Single agent with random policy
 - Verify observation vector correctness
 - Test action execution (all actions work)
 - Confirm reward signals make sense
 
 **Deliverables:**
+
 - RL-controlled TwinStickCharacter
 - Unit tests for observation/action pipeline
 - Reward function documentation
@@ -741,7 +775,9 @@ if (bWon) {
 #### Week 4: Multi-Agent Environment
 
 **Tasks:**
+
 1. Modify `ATwinStickGameMode`
+
    ```cpp
    UCLASS()
    class ATwinStickGameMode : public AGameModeBase
@@ -774,11 +810,13 @@ if (bWon) {
    - Configurable difficulty settings
 
 **Testing:**
+
 - 4 agents with random policies
 - Episode reset functionality
 - Multi-agent observation/action batching
 
 **Deliverables:**
+
 - Multi-agent TwinStick environment
 - Episode reset working correctly
 - 3+ arena layout variants
@@ -786,6 +824,7 @@ if (bWon) {
 #### Week 5: NPC RL Agents & Polish
 
 **Tasks:**
+
 1. Extend `ATwinStickNPC` with MARL
    - Add `UMARLAgentComponent`
    - Implement NPC-specific observations
@@ -807,11 +846,13 @@ if (bWon) {
    - Reduce unnecessary calculations
 
 **Testing:**
+
 - Cooperative: 4 agents vs NPC waves
 - Competitive: 2v2 agent teams
 - Performance: 60 FPS with 10+ agents
 
 **Deliverables:**
+
 - RL-enabled NPCs
 - Mixed scenario blueprints
 - Performance benchmarks
@@ -823,7 +864,9 @@ if (bWon) {
 #### Week 6: Unit-Level RL
 
 **Tasks:**
+
 1. Extend `AStrategyUnit` with MARL
+
    ```cpp
    UCLASS()
    class AStrategyUnit : public ACharacter
@@ -856,11 +899,13 @@ if (bWon) {
    - Strategic positioning
 
 **Testing:**
+
 - Single unit RL control
 - 5 units with independent policies
 - Action space coverage test
 
 **Deliverables:**
+
 - RL-controlled StrategyUnit
 - Observation/action specifications
 - Reward function implementation
@@ -868,6 +913,7 @@ if (bWon) {
 #### Week 7: Hierarchical Control
 
 **Tasks:**
+
 1. Implement strategic-level AI
    - High-level goal selection
    - Resource allocation decisions
@@ -889,11 +935,13 @@ if (bWon) {
    - Complex win conditions
 
 **Testing:**
+
 - Hierarchical policy integration
 - Multi-objective optimization
 - Communication channel validation
 
 **Deliverables:**
+
 - Hierarchical control system
 - Multi-objective reward balancing
 - Strategy scenarios (3+)
@@ -901,6 +949,7 @@ if (bWon) {
 #### Week 8: Team Coordination
 
 **Tasks:**
+
 1. Implement team-based training
    - 5v5 team scenarios
    - Shared team rewards
@@ -922,46 +971,51 @@ if (bWon) {
    - Action batching
 
 **Testing:**
+
 - 5v5 random policy baseline
 - Communication channel usage
 - Scalability test (20 units @ 30 FPS)
 
 **Deliverables:**
+
 - Team coordination features
 - Communication system
 - Scalability benchmarks
 
 ---
 
-### Phase 4: Python ML Framework Integration (Weeks 9-11)
+### Phase 4: C++ LibTorch Framework Integration (Weeks 9-11)
 
 #### Week 9: Environment Wrapper
 
 **Tasks:**
-1. Create Python environment wrapper
-   ```python
-   # Python/marl_framework/environments/unreal_env.py
-   import gymnasium as gym
-   from pettingzoo import ParallelEnv
 
-   class UnrealMARLEnv(ParallelEnv):
-       def __init__(self, host='localhost', port=9876):
-           self.connection = UnrealConnection(host, port)
-           self.agents = []
-           self.observation_spaces = {}
-           self.action_spaces = {}
+1. Create C++ environment wrapper
 
-       def reset(self, seed=None, options=None):
-           # Send reset to UE, receive observations
-           pass
+   ```cpp
+   // Cpp/marl_framework/environments/unreal_env.h
+   #pragma once
+   #include <torch/torch.h>
+   #include <string>
+   #include <vector>
+   #include <map>
 
-       def step(self, actions):
-           # Send actions to UE, receive obs/rewards/dones
-           pass
+   class UnrealMARLEnv {
+   public:
+       UnrealMARLEnv(bool use_ipc = false, int port = 9876);
+       std::map<std::string, torch::Tensor> reset(int seed = -1);
+       std::tuple<
+           std::map<std::string, torch::Tensor>,
+           std::map<std::string, float>,
+           std::map<std::string, bool>
+       > step(const std::map<std::string, torch::Tensor>& actions);
+   private:
+       std::vector<std::string> agents;
+   };
    ```
 
-2. Implement PettingZoo interface
-   - ParallelEnv API compliance
+2. Implement Custom RL Interface
+   - C++ Environment API compliance
    - Agent management
    - Space definitions
 
@@ -976,11 +1030,13 @@ if (bWon) {
    - History buffers
 
 **Testing:**
+
 - Environment reset/step cycle
 - Multiple episodes
 - Connection stability test
 
 **Deliverables:**
+
 - `UnrealMARLEnv` class
 - Unit tests for env interface
 - Connection reliability test
@@ -988,23 +1044,31 @@ if (bWon) {
 #### Week 10: Training Infrastructure
 
 **Tasks:**
-1. Implement training loop
-   ```python
-   # Python/marl_framework/trainers/marl_trainer.py
-   class MARLTrainer:
-       def __init__(self, env, algorithm, config):
-           self.env = env
-           self.algorithm = algorithm
-           self.config = config
 
-       def train(self, num_episodes=1000):
-           for episode in range(num_episodes):
-               obs = self.env.reset()
-               done = False
-               while not done:
-                   actions = self.algorithm.get_actions(obs)
-                   obs, rewards, dones, info = self.env.step(actions)
-                   self.algorithm.update(obs, rewards, dones)
+1. Implement training loop
+
+   ```cpp
+   // Cpp/marl_framework/trainers/marl_trainer.h
+   class MARLTrainer {
+   public:
+       MARLTrainer(UnrealMARLEnv* env, Algorithm* algorithm);
+       void train(int num_episodes = 1000) {
+           for (int episode = 0; episode < num_episodes; episode++) {
+               auto obs = env->reset();
+               bool done = false;
+               while (!done) {
+                   auto actions = algorithm->get_actions(obs);
+                   auto [next_obs, rewards, dones] = env->step(actions);
+                   algorithm->update(obs, rewards, dones);
+                   obs = std::move(next_obs);
+                   done = dones["__all__"];
+               }
+           }
+       }
+   private:
+       UnrealMARLEnv* env;
+       Algorithm* algorithm;
+   };
    ```
 
 2. Integrate RL algorithms
@@ -1013,9 +1077,9 @@ if (bWon) {
    - MAPPO (Multi-Agent PPO) with centralized critic
 
 3. Implement parallel sampling
-   - Ray for distributed training
-   - Multiple UE instances
-   - Batch collection
+   - C++ OpenMP / `std::thread` for multi-threading
+   - Multiple UE instances / environments
+   - Batch collection in shared memory
 
 4. Build replay buffer
    - Experience storage
@@ -1023,11 +1087,13 @@ if (bWon) {
    - Multi-agent trajectory handling
 
 **Testing:**
+
 - Single-agent PPO convergence
 - Multi-agent IPPO baseline
 - Parallel sampling correctness
 
 **Deliverables:**
+
 - Training loop implementation
 - Algorithm integrations (PPO, IPPO, MAPPO)
 - Parallel sampling system
@@ -1035,6 +1101,7 @@ if (bWon) {
 #### Week 11: Logging & Visualization
 
 **Tasks:**
+
 1. Integrate TensorBoard
    - Episode rewards (per agent, team average)
    - Episode lengths
@@ -1056,11 +1123,13 @@ if (bWon) {
    - Policy visualization tools
 
 **Testing:**
+
 - Metric logging correctness
 - Dashboard responsiveness
 - Experiment reproducibility
 
 **Deliverables:**
+
 - TensorBoard integration
 - WandB logging
 - Custom visualization dashboard
@@ -1072,29 +1141,35 @@ if (bWon) {
 #### Week 12: Multi-Instance Training
 
 **Tasks:**
+
 1. Set up UE dedicated server mode
    - Headless rendering
    - Command-line automation
    - Fast simulation mode
 
-2. Implement multi-process orchestration
-   ```python
-   # Python/marl_framework/infrastructure/multi_instance.py
-   class MultiInstanceManager:
-       def __init__(self, num_instances=8):
-           self.instances = []
-           for i in range(num_instances):
-               instance = UnrealInstance(port=9876+i)
-               self.instances.append(instance)
+2. Implement multi-instance orchestration
 
-       def collect_rollouts(self, policy):
-           # Parallel experience collection
-           pass
+   ```cpp
+   // Cpp/marl_framework/infrastructure/multi_instance.h
+   class MultiInstanceManager {
+   public:
+       MultiInstanceManager(int num_instances=8) {
+           for (int i=0; i<num_instances; i++) {
+               instances.push_back(std::make_unique<UnrealInstance>(9876 + i));
+           }
+       }
+
+       void collect_rollouts(Policy* policy) {
+           // Parallel experience collection
+       }
+   private:
+       std::vector<std::unique_ptr<UnrealInstance>> instances;
+   };
    ```
 
 3. Create Docker containerization
    - UE server container
-   - Python trainer container
+   - C++ LibTorch trainer container
    - Docker Compose orchestration
 
 4. Build cloud deployment
@@ -1103,11 +1178,13 @@ if (bWon) {
    - Cost optimization strategies
 
 **Testing:**
+
 - 8 parallel instances
 - Cloud deployment test
 - Throughput benchmarks
 
 **Deliverables:**
+
 - Multi-instance training system
 - Docker containers
 - Cloud deployment guide
@@ -1115,6 +1192,7 @@ if (bWon) {
 #### Week 13: Checkpointing & Curriculum
 
 **Tasks:**
+
 1. Implement checkpointing
    - Model saving/loading
    - Replay buffer serialization
@@ -1136,11 +1214,13 @@ if (bWon) {
    - Network optimization
 
 **Testing:**
+
 - Checkpoint save/load
 - Curriculum progression
 - Training speed benchmarks
 
 **Deliverables:**
+
 - Checkpointing system
 - Curriculum framework
 - Evaluation pipeline
@@ -1152,20 +1232,29 @@ if (bWon) {
 #### Week 14: Communication & Coordination
 
 **Tasks:**
-1. Implement communication channels
-   ```python
-   class CommNet(nn.Module):
-       def __init__(self, hidden_size=128):
-           super().__init__()
-           self.encoder = nn.Linear(obs_size, hidden_size)
-           self.comm_layer = nn.Linear(hidden_size, hidden_size)
-           self.decoder = nn.Linear(hidden_size, action_size)
 
-       def forward(self, obs, messages):
-           h = self.encoder(obs)
-           h_comm = self.comm_layer(messages.mean(dim=0))  # Average pooling
-           h = h + h_comm  # Skip connection
-           return self.decoder(h)
+1. Implement communication channels
+
+   ```cpp
+   struct CommNetImpl : torch::nn::Module {
+       CommNetImpl(int obs_size, int hidden_size, int action_size) {
+           encoder = register_module("encoder", torch::nn::Linear(obs_size, hidden_size));
+           comm_layer = register_module("comm_layer", torch::nn::Linear(hidden_size, hidden_size));
+           decoder = register_module("decoder", torch::nn::Linear(hidden_size, action_size));
+       }
+
+       torch::Tensor forward(torch::Tensor obs, torch::Tensor messages) {
+           auto h = encoder->forward(obs);
+           auto h_comm = comm_layer->forward(messages.mean(0)); // Average pooling
+           h = h + h_comm; // Skip connection
+           return decoder->forward(h);
+       }
+
+       torch::nn::Linear encoder{nullptr};
+       torch::nn::Linear comm_layer{nullptr};
+       torch::nn::Linear decoder{nullptr};
+   };
+   TORCH_MODULE(CommNet);
    ```
 
 2. Add attention mechanisms
@@ -1184,11 +1273,13 @@ if (bWon) {
    - Leader-follower dynamics
 
 **Testing:**
+
 - Communication usage analysis
 - Coordination emergence test
 - Role specialization metrics
 
 **Deliverables:**
+
 - Communication networks
 - Attention mechanisms
 - Formation control system
@@ -1196,18 +1287,24 @@ if (bWon) {
 #### Week 15: Self-Play & Opponent Modeling
 
 **Tasks:**
+
 1. Implement self-play training
-   ```python
-   class SelfPlayManager:
-       def __init__(self):
-           self.policy_pool = []
 
-       def add_policy(self, policy, performance):
-           self.policy_pool.append((policy, performance))
+   ```cpp
+   class SelfPlayManager {
+   public:
+       void add_policy(std::shared_ptr<Policy> policy, float performance) {
+           policy_pool.push_back({policy, performance});
+       }
 
-       def sample_opponent(self):
-           # Sample from pool based on performance
-           return random.choice(self.policy_pool)[0]
+       std::shared_ptr<Policy> sample_opponent() {
+           // Sample from pool based on performance
+           int idx = rand() % policy_pool.size();
+           return policy_pool[idx].first;
+       }
+   private:
+       std::vector<std::pair<std::shared_ptr<Policy>, float>> policy_pool;
+   };
    ```
 
 2. Build league training
@@ -1226,11 +1323,13 @@ if (bWon) {
    - Adaptive policy switching
 
 **Testing:**
+
 - Self-play convergence
 - ELO rating accuracy
 - Opponent prediction accuracy
 
 **Deliverables:**
+
 - Self-play framework
 - League training system
 - ELO rating implementation
@@ -1238,6 +1337,7 @@ if (bWon) {
 #### Week 16: Transfer Learning & Meta-Learning
 
 **Tasks:**
+
 1. Implement pre-training
    - Behavioral cloning from demos
    - Supervised learning phase
@@ -1259,11 +1359,13 @@ if (bWon) {
    - Continual learning strategies
 
 **Testing:**
+
 - Transfer learning effectiveness
 - Adaptation speed tests
 - Multi-task performance
 
 **Deliverables:**
+
 - Pre-training pipeline
 - Transfer learning framework
 - Meta-learning implementation
@@ -1275,47 +1377,51 @@ if (bWon) {
 #### Week 17: Production Inference
 
 **Tasks:**
-1. Convert models to ONNX
-   ```python
-   # Export trained PyTorch model
-   torch.onnx.export(
-       policy_net,
-       dummy_input,
-       "policy.onnx",
-       opset_version=11,
-       input_names=['observation'],
-       output_names=['action']
-   )
+
+1. Convert models to TorchScript
+
+   ```cpp
+   // Export trained LibTorch model
+   auto module = torch::jit::compile(
+       "def forward(self, obs):\n"
+       "    return self.policy_net.forward(obs)\n"
+   );
+   // Or standard TorchScript tracing:
+   auto traced_module = torch::jit::trace(policy_net, dummy_input);
+   traced_module.save("policy.pt");
    ```
 
-2. Integrate ONNX Runtime in UE
-   - C++ ONNX Runtime plugin
-   - Model loading from .onnx files
-   - Inference execution in UE
+2. Integrate LibTorch Runtime in UE
+   - C++ LibTorch plugin directly in UE
+   - Model loading from `.pt` (TorchScript) files
+   - Native inference execution in UE C++
 
-3. Implement UE Neural Network Engine (NNE)
-   - Native UE5 NNE support
+3. Support hardware acceleration
+   - CUDA / DirectML integration for LibTorch
    - Cross-platform deployment
-   - Mobile optimization
+   - Optimization for inference
 
 4. Build inference modes
-   - Local embedded inference
+   - Local embedded inference (direct LibTorch loaded natively)
    - Remote server inference (gRPC)
    - Hybrid mode (fallback logic)
 
 **Testing:**
+
 - Inference latency benchmarks
-- Accuracy comparison (Python vs ONNX)
+- Accuracy comparison
 - Cross-platform testing
 
 **Deliverables:**
-- ONNX export pipeline
-- UE ONNX Runtime integration
+
+- TorchScript export pipeline
+- Native UE LibTorch Runtime integration
 - Inference benchmarks
 
 #### Week 18: Evaluation & Human Testing
 
 **Tasks:**
+
 1. Create evaluation framework
    - Automated benchmark suite
    - Human vs AI matches
@@ -1338,11 +1444,13 @@ if (bWon) {
    - User experience feedback
 
 **Testing:**
+
 - All evaluation metrics
 - Human playtest sessions (10+ users)
 - Explainability tool validation
 
 **Deliverables:**
+
 - Evaluation framework
 - Benchmark results report
 - Human playtest analysis
@@ -1354,6 +1462,7 @@ if (bWon) {
 ### 5.1 Hardware Requirements
 
 #### Development Environment
+
 - **CPU:** Intel i7/i9 or AMD Ryzen 7/9 (8+ cores)
 - **RAM:** 32GB minimum, 64GB recommended
 - **GPU:** NVIDIA RTX 3080 or higher (12GB+ VRAM)
@@ -1361,6 +1470,7 @@ if (bWon) {
 - **OS:** Windows 11, Ubuntu 22.04, or macOS 13+
 
 #### Training Infrastructure
+
 - **GPU Cluster:**
   - 4-8× NVIDIA A100 (40GB) or RTX 4090 (24GB)
   - Alternatively: Cloud TPU v4 pods
@@ -1371,6 +1481,7 @@ if (bWon) {
 - **Storage:** 2TB NVMe SSD for replay buffers and checkpoints
 
 #### Production Deployment
+
 - **Server Inference:**
   - NVIDIA T4 or RTX 3060 (affordable)
   - 16GB VRAM, 32GB RAM
@@ -1384,6 +1495,7 @@ if (bWon) {
 ### 5.2 Software Stack
 
 #### Unreal Engine
+
 - **Version:** 5.7 (current project)
 - **Modules:**
   - Core, CoreUObject, Engine
@@ -1392,27 +1504,23 @@ if (bWon) {
   - StateTreeModule (existing)
   - Niagara, UMG, Slate (existing)
 
-#### Python ML Framework
-- **Version:** Python 3.10+
+#### C++ ML Framework
+
+- **Version:** C++17/20
 - **Core Libraries:**
-  - PyTorch 2.0+ or JAX 0.4+
-  - Gymnasium 0.29+
-  - PettingZoo 1.24+
-  - NumPy, SciPy, Pandas
+  - LibTorch 2.0+ (C++ frontend for PyTorch)
+  - Eigen3 (Matrix operations)
 - **RL Libraries:**
-  - Ray RLlib 2.7+ (recommended)
-  - Stable Baselines3 2.1+
-  - CleanRL (lightweight alternative)
+  - Custom C++ LibTorch toolkit
 - **Distributed Training:**
-  - Ray 2.7+
-  - Horovod (optional)
-  - DeepSpeed (optional for large models)
+  - Torch Distributed C++
+  - OpenMPI (optional)
 - **Logging:**
-  - TensorBoard
-  - Weights & Biases
-  - MLflow
+  - TensorBoard (via C++ writers)
+  - Custom CSV/JSON logging
 
 #### Supporting Tools
+
 - **Containerization:** Docker 24+, Docker Compose
 - **Version Control:** Git, Git LFS (for models)
 - **Cloud:** AWS SageMaker, GCP Vertex AI, Azure ML
@@ -1420,44 +1528,44 @@ if (bWon) {
 
 ### 5.3 Performance Targets
 
-| Metric | Target | Baseline | Notes |
-|--------|--------|----------|-------|
-| **Inference Latency** | <50ms | <100ms | 95th percentile |
-| **Training FPS** | 200+ steps/sec | 100 steps/sec | Per environment |
-| **Parallel Instances** | 16+ | 8 | Simultaneous training |
-| **Memory Usage** | <8GB VRAM | <16GB | Per instance |
-| **Episode Length** | 5-10 min | Variable | Twin Stick |
-| **Sample Efficiency** | 10M steps | 50M steps | To reasonable policy |
-| **Real-time Gameplay** | 60 FPS | 30 FPS | With 10 RL agents |
+| Metric                 | Target         | Baseline      | Notes                 |
+| ---------------------- | -------------- | ------------- | --------------------- |
+| **Inference Latency**  | <50ms          | <100ms        | 95th percentile       |
+| **Training FPS**       | 200+ steps/sec | 100 steps/sec | Per environment       |
+| **Parallel Instances** | 16+            | 8             | Simultaneous training |
+| **Memory Usage**       | <8GB VRAM      | <16GB         | Per instance          |
+| **Episode Length**     | 5-10 min       | Variable      | Twin Stick            |
+| **Sample Efficiency**  | 10M steps      | 50M steps     | To reasonable policy  |
+| **Real-time Gameplay** | 60 FPS         | 30 FPS        | With 10 RL agents     |
 
 ### 5.4 Network Protocol Specification
 
 #### Message Types
 
-| Message Type | Direction | Description |
-|--------------|-----------|-------------|
-| `handshake` | Python → UE | Initial connection, version check |
-| `handshake_ack` | UE → Python | Connection accepted |
-| `reset` | Python → UE | Start new episode |
-| `reset_response` | UE → Python | Initial observations |
-| `step` | Python → UE | Actions for all agents |
-| `step_response` | UE → Python | Observations, rewards, dones |
-| `config_update` | Python → UE | Change environment config |
-| `pause` | Python → UE | Pause simulation |
-| `resume` | Python → UE | Resume simulation |
-| `shutdown` | Python → UE | Graceful disconnect |
-| `heartbeat` | Bidirectional | Keep-alive signal |
+| Message Type     | Direction     | Description                       |
+| ---------------- | ------------- | --------------------------------- |
+| `handshake`      | C++ ML → UE   | Initial connection, version check |
+| `handshake_ack`  | UE → C++ ML   | Connection accepted               |
+| `reset`          | C++ ML → UE   | Start new episode                 |
+| `reset_response` | UE → C++ ML   | Initial observations              |
+| `step`           | C++ ML → UE   | Actions for all agents            |
+| `step_response`  | UE → C++ ML   | Observations, rewards, dones      |
+| `config_update`  | C++ ML → UE   | Change environment config         |
+| `pause`          | C++ ML → UE   | Pause simulation                  |
+| `resume`         | C++ ML → UE   | Resume simulation                 |
+| `shutdown`       | C++ ML → UE   | Graceful disconnect               |
+| `heartbeat`      | Bidirectional | Keep-alive signal                 |
 
 #### Error Handling
 
-| Error Code | Description | Recovery Action |
-|------------|-------------|-----------------|
-| `E001` | Invalid message format | Send error response, drop message |
-| `E002` | Unknown message type | Send error response |
-| `E003` | Action validation failed | Clamp/clip actions, continue |
-| `E004` | Episode not initialized | Send reset required |
-| `E005` | Connection timeout | Reconnection attempt |
-| `E006` | Version mismatch | Abort connection |
+| Error Code | Description              | Recovery Action                   |
+| ---------- | ------------------------ | --------------------------------- |
+| `E001`     | Invalid message format   | Send error response, drop message |
+| `E002`     | Unknown message type     | Send error response               |
+| `E003`     | Action validation failed | Clamp/clip actions, continue      |
+| `E004`     | Episode not initialized  | Send reset required               |
+| `E005`     | Connection timeout       | Reconnection attempt              |
+| `E006`     | Version mismatch         | Abort connection                  |
 
 ---
 
@@ -1470,34 +1578,35 @@ Week  Phase                            Tasks
 1-2   Phase 1: Foundation              Plugin Setup, Sensors, Config
 3-5   Phase 2: Twin Stick MARL         Agent Integration, Multi-agent, NPCs
 6-8   Phase 3: Strategy MARL           Unit RL, Hierarchical, Team Coordination
-9-11  Phase 4: Python Integration      Env Wrapper, Training, Logging
+9-11  Phase 4: C++ LibTorch Integration      Env Wrapper, Training, Logging
 12-13 Phase 5: Training Infrastructure Multi-instance, Curriculum
 14-16 Phase 6: Advanced Features       Communication, Self-play, Transfer
-17-18 Phase 7: Deployment              ONNX, Evaluation, Human Testing
+17-18 Phase 7: Deployment              TorchScript, Evaluation, Human Testing
 ```
 
 ### 6.2 Milestones
 
-| Week | Milestone | Success Criteria |
-|------|-----------|------------------|
-| 2 | Foundation Complete | Network echo test passes, sensors functional |
-| 3 | Single RL Agent | One agent with random policy, obs/action verified |
-| 5 | Multi-Agent TwinStick | 4 agents training, episode reset working |
-| 8 | Strategy MARL | 5v5 strategy units, hierarchical control |
-| 11 | Training Pipeline | PPO/MAPPO training, TensorBoard logging |
-| 13 | Scalable Training | 8+ parallel instances, curriculum learning |
-| 16 | Advanced Features | Self-play, communication, transfer learning |
-| 18 | Production Ready | ONNX inference <50ms, human playtest complete |
+| Week | Milestone             | Success Criteria                                     |
+| ---- | --------------------- | ---------------------------------------------------- |
+| 2    | Foundation Complete   | Network echo test passes, sensors functional         |
+| 3    | Single RL Agent       | One agent with random policy, obs/action verified    |
+| 5    | Multi-Agent TwinStick | 4 agents training, episode reset working             |
+| 8    | Strategy MARL         | 5v5 strategy units, hierarchical control             |
+| 11   | Training Pipeline     | PPO/MAPPO training, TensorBoard logging              |
+| 13   | Scalable Training     | 8+ parallel instances, curriculum learning           |
+| 16   | Advanced Features     | Self-play, communication, transfer learning          |
+| 18   | Production Ready      | TorchScript inference <50ms, human playtest complete |
 
 ### 6.3 Critical Path
 
 1. **Foundation (Weeks 1-2):** Blocking for all subsequent work
-2. **Twin Stick Integration (Weeks 3-5):** Required for Python integration
-3. **Python Framework (Weeks 9-11):** Enables training
+2. **Twin Stick Integration (Weeks 3-5):** Required for LibTorch integration
+3. **C++ ML Framework (Weeks 9-11):** Enables training
 4. **Training Infrastructure (Weeks 12-13):** Enables large-scale experiments
 
 **Parallel Tracks:**
-- Strategy variant (Weeks 6-8) can overlap with Python work (Weeks 9-11)
+
+- Strategy variant (Weeks 6-8) can overlap with C++ work (Weeks 9-11)
 - Advanced features (Weeks 14-16) can start once basic training works (Week 11)
 
 ---
@@ -1506,32 +1615,33 @@ Week  Phase                            Tasks
 
 ### 7.1 Team Composition
 
-| Role | Responsibilities | Time Commitment |
-|------|------------------|-----------------|
-| **UE C++ Engineer** | Plugin development, network layer, optimization | Full-time (18 weeks) |
-| **ML Engineer** | Algorithm implementation, training pipeline | Full-time (10 weeks, Weeks 9-18) |
-| **Gameplay Engineer** | Game variant integration, reward design | Half-time (8 weeks) |
-| **DevOps Engineer** | Cloud infrastructure, Docker, CI/CD | Part-time (4 weeks) |
-| **Research Scientist** | Algorithm design, experiment planning | Consulting (ongoing) |
-| **QA/Tester** | Testing, human playtests, bug reports | Part-time (ongoing) |
+| Role                   | Responsibilities                                | Time Commitment                  |
+| ---------------------- | ----------------------------------------------- | -------------------------------- |
+| **UE C++ Engineer**    | Plugin development, network layer, optimization | Full-time (18 weeks)             |
+| **ML Engineer**        | Algorithm implementation, training pipeline     | Full-time (10 weeks, Weeks 9-18) |
+| **Gameplay Engineer**  | Game variant integration, reward design         | Half-time (8 weeks)              |
+| **DevOps Engineer**    | Cloud infrastructure, Docker, CI/CD             | Part-time (4 weeks)              |
+| **Research Scientist** | Algorithm design, experiment planning           | Consulting (ongoing)             |
+| **QA/Tester**          | Testing, human playtests, bug reports           | Part-time (ongoing)              |
 
 **Total Effort:** ~3.5 FTE over 18 weeks
 
 ### 7.2 Budget Estimate
 
-| Category | Item | Cost (USD) | Notes |
-|----------|------|------------|-------|
-| **Hardware** | Development workstations (2×) | $6,000 | RTX 4080, 64GB RAM |
-| **Hardware** | Training GPU server (4× RTX 4090) | $15,000 | Or cloud equivalent |
-| **Cloud** | AWS/GCP compute (6 months) | $8,000 | p3.8xlarge instances |
-| **Cloud** | Storage (S3/GCS) | $500 | Models, replays, logs |
-| **Software** | Weights & Biases Pro (6 mo.) | $600 | Team plan |
-| **Software** | JetBrains licenses (2) | $400 | IDEs |
-| **Consulting** | ML research consulting (40 hrs) | $8,000 | @$200/hr |
-| **Misc** | Books, courses, misc | $500 | Learning resources |
-| **Total** | | **$39,000** | |
+| Category       | Item                              | Cost (USD)  | Notes                 |
+| -------------- | --------------------------------- | ----------- | --------------------- |
+| **Hardware**   | Development workstations (2×)     | $6,000      | RTX 4080, 64GB RAM    |
+| **Hardware**   | Training GPU server (4× RTX 4090) | $15,000     | Or cloud equivalent   |
+| **Cloud**      | AWS/GCP compute (6 months)        | $8,000      | p3.8xlarge instances  |
+| **Cloud**      | Storage (S3/GCS)                  | $500        | Models, replays, logs |
+| **Software**   | Weights & Biases Pro (6 mo.)      | $600        | Team plan             |
+| **Software**   | JetBrains licenses (2)            | $400        | IDEs                  |
+| **Consulting** | ML research consulting (40 hrs)   | $8,000      | @$200/hr              |
+| **Misc**       | Books, courses, misc              | $500        | Learning resources    |
+| **Total**      |                                   | **$39,000** |                       |
 
 **Cost Optimization:**
+
 - Use spot instances on AWS (50-70% savings)
 - Open-source alternatives to WandB (TensorBoard + MLflow)
 - University/research credits (if available)
@@ -1553,9 +1663,10 @@ aws ec2 run-instances \
 # Setup script (setup_script.sh)
 #!/bin/bash
 git clone https://github.com/your-repo/MARLGame.git
-cd MARLGame/Python
-pip install -r requirements.txt
-python -m marl_framework.trainers.marl_trainer \
+cd MARLGame/Cpp
+cmake -B build
+cmake --build build --config Release
+./build/marl_trainer \
   --env twin_stick \
   --algorithm mappo \
   --num-instances 8
@@ -1565,7 +1676,7 @@ python -m marl_framework.trainers.marl_trainer \
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   unreal-server:
     image: marlgame-server:latest
@@ -1578,21 +1689,20 @@ services:
       replicas: 8
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 8G
 
-  python-trainer:
+  cpp-trainer:
     image: marlgame-trainer:latest
     depends_on:
       - unreal-server
     environment:
       - CUDA_VISIBLE_DEVICES=0,1,2,3
-      - WANDB_API_KEY=${WANDB_KEY}
     volumes:
       - ./checkpoints:/app/checkpoints
       - ./logs:/app/logs
     command: >
-      python -m marl_framework.trainers.marl_trainer
+      ./marl_trainer
       --env twin_stick
       --algorithm mappo
       --num-instances 8
@@ -1604,34 +1714,34 @@ services:
 
 ### 8.1 Technical Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Training Instability** | High | High | Start with simple scenarios, use proven algorithms (PPO), extensive reward shaping, gradual curriculum |
-| **Performance Bottlenecks** | Medium | High | Profile early, optimize hot paths, use UE dedicated servers, GPU acceleration |
-| **Network Communication Issues** | Medium | Medium | Robust error handling, reconnection logic, message validation |
-| **Emergent Degenerate Behaviors** | High | Medium | Diverse reward functions, manual checkpoints, intervention gates |
-| **Integration Complexity** | Medium | High | Incremental integration, extensive unit tests, mock servers |
-| **Scalability Limits** | Low | High | Early scalability tests, distributed architecture design |
-| **Model Size Constraints** | Low | Medium | Model compression, quantization, knowledge distillation |
+| Risk                              | Probability | Impact | Mitigation Strategy                                                                                    |
+| --------------------------------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------ |
+| **Training Instability**          | High        | High   | Start with simple scenarios, use proven algorithms (PPO), extensive reward shaping, gradual curriculum |
+| **Performance Bottlenecks**       | Medium      | High   | Profile early, optimize hot paths, use UE dedicated servers, GPU acceleration                          |
+| **Network Communication Issues**  | Medium      | Medium | Robust error handling, reconnection logic, message validation                                          |
+| **Emergent Degenerate Behaviors** | High        | Medium | Diverse reward functions, manual checkpoints, intervention gates                                       |
+| **Integration Complexity**        | Medium      | High   | Incremental integration, extensive unit tests, mock servers                                            |
+| **Scalability Limits**            | Low         | High   | Early scalability tests, distributed architecture design                                               |
+| **Model Size Constraints**        | Low         | Medium | Model compression, quantization, knowledge distillation                                                |
 
 ### 8.2 Project Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Timeline Slippage** | Medium | High | Agile sprints, weekly reviews, buffer time in schedule |
-| **Scope Creep** | High | Medium | Clear phase deliverables, prioritization framework |
-| **Resource Availability** | Low | High | Cross-training team members, external consulting |
-| **Technology Changes** | Low | Low | Stick to stable versions (UE 5.7, PyTorch 2.0) |
-| **Team Turnover** | Low | High | Documentation, knowledge sharing, code reviews |
+| Risk                      | Probability | Impact | Mitigation Strategy                                    |
+| ------------------------- | ----------- | ------ | ------------------------------------------------------ |
+| **Timeline Slippage**     | Medium      | High   | Agile sprints, weekly reviews, buffer time in schedule |
+| **Scope Creep**           | High        | Medium | Clear phase deliverables, prioritization framework     |
+| **Resource Availability** | Low         | High   | Cross-training team members, external consulting       |
+| **Technology Changes**    | Low         | Low    | Stick to stable versions (UE 5.7, LibTorch 2.0+)       |
+| **Team Turnover**         | Low         | High   | Documentation, knowledge sharing, code reviews         |
 
 ### 8.3 Research Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Algorithm Doesn't Converge** | Medium | High | Multiple algorithm baselines, hyperparameter tuning, expert consultation |
-| **Insufficient Sample Efficiency** | Medium | Medium | Transfer learning, behavioral cloning pre-training |
-| **Poor Generalization** | Medium | Medium | Domain randomization, diverse training scenarios |
-| **Coordination Failure** | High | Medium | Explicit communication channels, shaped team rewards |
+| Risk                               | Probability | Impact | Mitigation Strategy                                                      |
+| ---------------------------------- | ----------- | ------ | ------------------------------------------------------------------------ |
+| **Algorithm Doesn't Converge**     | Medium      | High   | Multiple algorithm baselines, hyperparameter tuning, expert consultation |
+| **Insufficient Sample Efficiency** | Medium      | Medium | Transfer learning, behavioral cloning pre-training                       |
+| **Poor Generalization**            | Medium      | Medium | Domain randomization, diverse training scenarios                         |
+| **Coordination Failure**           | High        | Medium | Explicit communication channels, shaped team rewards                     |
 
 ---
 
@@ -1640,6 +1750,7 @@ services:
 ### 9.1 Unit Testing
 
 **C++ Component Tests (Google Test framework)**
+
 ```cpp
 // Tests/MARLAgentComponentTests.cpp
 TEST(MARLAgentComponent, ObservationSizeCorrect) {
@@ -1660,45 +1771,61 @@ TEST(MARLAgentComponent, ActionValidation) {
 }
 ```
 
-**Python Environment Tests (pytest)**
-```python
-# tests/test_unreal_env.py
-def test_reset():
-    env = UnrealMARLEnv()
-    obs = env.reset()
-    assert len(obs) == env.num_agents
-    assert all(o.shape == (128,) for o in obs.values())
+**C++ Environment Tests (Google Test)**
 
-def test_step():
-    env = UnrealMARLEnv()
-    env.reset()
-    actions = {agent: env.action_space(agent).sample() for agent in env.agents}
-    obs, rewards, dones, truncated, info = env.step(actions)
-    assert len(rewards) == env.num_agents
+```cpp
+// tests/test_unreal_env.cpp
+TEST(UnrealEnv, Reset) {
+    UnrealMARLEnv env;
+    auto obs = env.reset();
+    EXPECT_EQ(obs.size(), env.num_agents());
+    for (auto& [name, tensor] : obs) {
+        EXPECT_EQ(tensor.size(0), 128);
+    }
+}
+
+TEST(UnrealEnv, Step) {
+    UnrealMARLEnv env;
+    env.reset();
+    std::map<std::string, torch::Tensor> actions;
+    for (auto& agent : env.agents()) {
+        actions[agent] = torch::rand({24}); // Sample action
+    }
+    auto [obs, rewards, dones] = env.step(actions);
+    EXPECT_EQ(rewards.size(), env.num_agents());
+}
 ```
 
 ### 9.2 Integration Testing
 
-**Network Communication Test**
-```python
-# tests/test_network_protocol.py
-def test_full_episode():
-    env = UnrealMARLEnv(host='localhost', port=9876)
+**Network/IPC Communication Test**
 
-    # Episode 1
-    obs = env.reset()
-    for _ in range(100):
-        actions = {agent: env.action_space(agent).sample() for agent in env.agents}
-        obs, rewards, dones, truncated, info = env.step(actions)
-        if dones['__all__']:
-            break
+```cpp
+// tests/test_network_protocol.cpp
+TEST(NetworkProtocol, FullEpisode) {
+    UnrealMARLEnv env(true, 9876); // use_ipc, port
 
-    # Episode 2 (test reset)
-    obs = env.reset()
-    assert obs is not None
+    // Episode 1
+    auto obs = env.reset();
+    for (int i = 0; i < 100; i++) {
+        std::map<std::string, torch::Tensor> actions;
+        for (auto& agent : env.agents()) {
+            actions[agent] = torch::rand({24});
+        }
+        auto [next_obs, rewards, dones] = env.step(actions);
+        if (dones["__all__"]) {
+            break;
+        }
+    }
+
+    // Episode 2 (test reset)
+    obs = env.reset();
+    EXPECT_FALSE(obs.empty());
+}
 ```
 
 **Multi-Agent Synchronization Test**
+
 ```cpp
 // Tests/MARLEnvironmentTests.cpp
 TEST(MARLEnvironment, MultiAgentStep) {
@@ -1723,29 +1850,35 @@ TEST(MARLEnvironment, MultiAgentStep) {
 ### 9.3 Performance Testing
 
 **Benchmarks**
-```python
-# tests/benchmark_training.py
-def benchmark_training_throughput():
-    env = UnrealMARLEnv(num_instances=8)
-    start_time = time.time()
-    total_steps = 0
 
-    for episode in range(100):
-        obs = env.reset()
-        done = False
-        while not done:
-            actions = random_policy(obs)
-            obs, rewards, dones, truncated, info = env.step(actions)
-            total_steps += 1
-            done = dones['__all__']
+```cpp
+// tests/benchmark_training.cpp
+TEST(Benchmark, TrainingThroughput) {
+    UnrealMARLEnv env(true, 8); // 8 instances
+    auto start_time = std::chrono::high_resolution_clock::now();
+    int total_steps = 0;
 
-    elapsed = time.time() - start_time
-    throughput = total_steps / elapsed
-    print(f"Training throughput: {throughput:.2f} steps/sec")
-    assert throughput > 200  # Target: 200 steps/sec
+    for (int episode = 0; episode < 100; episode++) {
+        auto obs = env.reset();
+        bool done = false;
+        while (!done) {
+            auto actions = random_policy(obs);
+            auto [next_obs, rewards, dones] = env.step(actions);
+            total_steps++;
+            done = dones["__all__"];
+        }
+    }
+
+    auto elapsed = std::chrono::high_resolution_clock::now() - start_time;
+    double seconds = std::chrono::duration<double>(elapsed).count();
+    double throughput = total_steps / seconds;
+    std::cout << "Training throughput: " << throughput << " steps/sec\n";
+    EXPECT_GT(throughput, 200.0); // Target: 200 steps/sec
+}
 ```
 
 **Profiling**
+
 ```cpp
 // Use UE Profiler for C++ hotspots
 {
@@ -1753,49 +1886,55 @@ def benchmark_training_throughput():
     TArray<float> Obs = Agent->CollectVectorObservation();
 }
 
-// Use cProfile for Python
-python -m cProfile -o profile.out \
-  -m marl_framework.trainers.marl_trainer \
-  --env twin_stick --episodes 10
+// Use perf or VTune for C++ trainer profiling
 ```
 
 ### 9.4 Algorithm Testing
 
 **Sanity Checks**
-```python
-# tests/test_algorithm_sanity.py
-def test_ppo_overfitting():
-    """Test that PPO can overfit a simple environment"""
-    env = SimpleEnv()  # Fixed rewards
-    ppo = PPO(env)
 
-    for _ in range(100):
-        ppo.train(num_steps=1000)
+```cpp
+// tests/test_algorithm_sanity.cpp
+TEST(AlgorithmSanity, PPOOverfitting) {
+    // Test that PPO can overfit a simple environment
+    SimpleEnv env;  // Fixed rewards
+    MAPPO ppo(&env);
 
-    # Should achieve near-perfect performance
-    eval_reward = evaluate(ppo, env, episodes=10)
-    assert eval_reward > 0.95 * max_possible_reward
+    for (int i = 0; i < 100; i++) {
+        ppo.train(1000);
+    }
 
-def test_reward_signal():
-    """Test that reward function makes sense"""
-    env = UnrealMARLEnv()
-    obs = env.reset()
+    // Should achieve near-perfect performance
+    float eval_reward = evaluate(&ppo, &env, 10);
+    EXPECT_GT(eval_reward, 0.95 * max_possible_reward);
+}
 
-    # Good action (move towards goal)
-    good_action = get_optimal_action(obs)
-    _, reward_good, _, _, _ = env.step({agent: good_action for agent in env.agents})
+TEST(AlgorithmSanity, RewardSignal) {
+    // Test that reward function makes sense
+    UnrealMARLEnv env;
+    auto obs = env.reset();
 
-    # Bad action (move away from goal)
-    env.reset()
-    bad_action = get_bad_action(obs)
-    _, reward_bad, _, _, _ = env.step({agent: bad_action for agent in env.agents})
+    // Good action (move towards goal)
+    auto good_action = get_optimal_action(obs);
+    std::map<std::string, torch::Tensor> good_actions;
+    for (auto& agent : env.agents()) good_actions[agent] = good_action;
+    auto [_, reward_good, __] = env.step(good_actions);
 
-    assert reward_good['agent_0'] > reward_bad['agent_0']
+    // Bad action (move away from goal)
+    env.reset();
+    auto bad_action = get_bad_action(obs);
+    std::map<std::string, torch::Tensor> bad_actions;
+    for (auto& agent : env.agents()) bad_actions[agent] = bad_action;
+    auto [___, reward_bad, ____] = env.step(bad_actions);
+
+    EXPECT_GT(reward_good["agent_0"], reward_bad["agent_0"]);
+}
 ```
 
 ### 9.5 Human Playtest Protocol
 
 **Phase 1: Expert Playtesting (Week 15)**
+
 - 5 experienced players
 - 30-minute sessions each
 - Competitive matches vs RL agents
@@ -1803,6 +1942,7 @@ def test_reward_signal():
 - Qualitative feedback on AI behavior
 
 **Phase 2: General Audience (Week 18)**
+
 - 20 general gamers
 - 1-hour sessions (tutorial + matches)
 - Mixed human-AI teams
@@ -1813,6 +1953,7 @@ def test_reward_signal():
   - AI perceived intelligence
 
 **Feedback Collection**
+
 ```
 Survey Questions:
 1. How intelligent did the AI appear? (1-10)
@@ -1828,141 +1969,126 @@ Survey Questions:
 
 ### 10.1 Model Export Pipeline
 
-**Step 1: Train in PyTorch**
-```python
-# Train final model
-policy_net = train_marl_policy(
-    env='twin_stick',
-    algorithm='mappo',
-    num_steps=50_000_000
-)
+**Step 1: Train in C++ LibTorch**
 
-# Save checkpoint
-torch.save(policy_net.state_dict(), 'policy_final.pth')
+```cpp
+// Train final model
+auto policy_net = train_marl_policy(
+    "twin_stick",
+    "mappo",
+    50000000
+);
+
+// Save checkpoint
+torch::save(policy_net, "policy_final.pt");
 ```
 
-**Step 2: Export to ONNX**
-```python
-# Export to ONNX
-dummy_input = torch.randn(1, 128)  # Observation size
-torch.onnx.export(
-    policy_net,
-    dummy_input,
-    "policy_twin_stick.onnx",
-    export_params=True,
-    opset_version=11,
-    input_names=['observation'],
-    output_names=['action_logits'],
-    dynamic_axes={
-        'observation': {0: 'batch_size'},
-        'action_logits': {0: 'batch_size'}
-    }
-)
+**Step 2: Export to TorchScript**
 
-# Verify ONNX model
-import onnx
-onnx_model = onnx.load("policy_twin_stick.onnx")
-onnx.checker.check_model(onnx_model)
+```cpp
+// Export to TorchScript
+auto dummy_input = torch::randn({1, 128});  // Observation size
+auto traced_model = torch::jit::trace(policy_net, dummy_input);
+
+traced_model.save("policy_twin_stick.pt");
+
+// Verify model
+try {
+    auto loaded_module = torch::jit::load("policy_twin_stick.pt");
+    std::cout << "Model loaded successfully\n";
+} catch (const c10::Error& e) {
+    std::cerr << "Error loading model\n";
+}
 ```
 
 **Step 3: Optimize for Inference**
-```python
-# Quantize model (INT8)
-from onnxruntime.quantization import quantize_dynamic
 
-quantize_dynamic(
-    "policy_twin_stick.onnx",
-    "policy_twin_stick_int8.onnx",
-    weight_type=QuantType.QInt8
-)
+```cpp
+// Quantize model (INT8 Dynamic Quantization)
+// Can be applied via PyTorch/LibTorch utilities
+auto quantized_model = torch::quantization::quantize_dynamic(
+    policy_net,
+    /* qconfig_spec */ { { torch::nn::Linear::ClassType(), torch::default_dynamic_qconfig() } }
+);
+torch::jit::trace(quantized_model, dummy_input).save("policy_twin_stick_int8.pt");
 ```
 
 ### 10.2 UE Integration
 
-**C++ ONNX Runtime Integration**
+**C++ LibTorch Integration**
+
 ```cpp
 // MARLInferenceComponent.h
 UCLASS()
 class UMARLInferenceComponent : public UActorComponent
 {
-    GENERATED_BODY()
+ GENERATED_BODY()
 
 private:
-    Ort::Env OrtEnv;
-    Ort::Session* OrtSession;
+ torch::jit::script::Module TorchModule;
 
 public:
-    UFUNCTION(BlueprintCallable)
-    void LoadModel(const FString& ModelPath);
+ UFUNCTION(BlueprintCallable)
+ void LoadModel(const FString& ModelPath);
 
-    UFUNCTION(BlueprintCallable)
-    TArray<float> RunInference(const TArray<float>& Observation);
+ UFUNCTION(BlueprintCallable)
+ TArray<float> RunInference(const TArray<float>& Observation);
 };
 
 // MARLInferenceComponent.cpp
 void UMARLInferenceComponent::LoadModel(const FString& ModelPath)
 {
-    Ort::SessionOptions SessionOptions;
-    SessionOptions.SetIntraOpNumThreads(4);
-    SessionOptions.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-
-    OrtSession = new Ort::Session(OrtEnv, TCHAR_TO_UTF8(*ModelPath), SessionOptions);
+ try {
+     TorchModule = torch::jit::load(TCHAR_TO_UTF8(*ModelPath));
+     TorchModule.eval();
+ }
+ catch (const c10::Error& e) {
+     UE_LOG(LogTemp, Error, TEXT("Error loading TorchScript model"));
+ }
 }
 
 TArray<float> UMARLInferenceComponent::RunInference(const TArray<float>& Observation)
 {
-    // Prepare input tensor
-    std::vector<float> InputData(Observation.GetData(), Observation.GetData() + Observation.Num());
-    std::vector<int64_t> InputShape = {1, Observation.Num()};
+ // Prepare input tensor
+ torch::Tensor InputTensor = torch::from_blob(
+     (void*)Observation.GetData(),
+     {1, Observation.Num()},
+     torch::kFloat32
+ ).clone();
 
-    auto MemoryInfo = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    Ort::Value InputTensor = Ort::Value::CreateTensor<float>(
-        MemoryInfo,
-        InputData.data(),
-        InputData.size(),
-        InputShape.data(),
-        InputShape.size()
-    );
+ // Run inference
+ std::vector<torch::jit::IValue> Inputs;
+ Inputs.push_back(InputTensor);
 
-    // Run inference
-    const char* InputNames[] = {"observation"};
-    const char* OutputNames[] = {"action_logits"};
+ torch::Tensor OutputTensor = TorchModule.forward(Inputs).toTensor();
 
-    auto OutputTensors = OrtSession->Run(
-        Ort::RunOptions{nullptr},
-        InputNames,
-        &InputTensor,
-        1,
-        OutputNames,
-        1
-    );
+ // Extract results
+ int OutputSize = OutputTensor.size(1);
+ TArray<float> Result;
+ Result.Append(OutputTensor.data_ptr<float>(), OutputSize);
 
-    // Extract results
-    float* OutputData = OutputTensors[0].GetTensorMutableData<float>();
-    auto OutputShape = OutputTensors[0].GetTensorTypeAndShapeInfo().GetShape();
-    int OutputSize = OutputShape[1];
-
-    TArray<float> Result;
-    Result.Append(OutputData, OutputSize);
-    return Result;
+ return Result;
 }
 ```
 
 ### 10.3 Deployment Modes
 
 **Mode 1: Embedded Inference (Recommended for single-player)**
-- ONNX model embedded in game package
+
+- TorchScript (`.pt`) model embedded in game package
 - CPU/GPU inference on client machine
 - No network latency
 - Works offline
 
 **Mode 2: Remote Inference Server**
+
 - gRPC server hosting models
 - Supports model updates without client patches
 - Centralized compute (GPUs)
 - Requires internet connection
 
 **Mode 3: Hybrid**
+
 - Simple actions (movement) local
 - Complex actions (strategy) remote
 - Fallback to local on network failure
@@ -1981,10 +2107,10 @@ public:
     float ModelA_Percentage = 0.5f;  // 50/50 split
 
     UPROPERTY(EditAnywhere)
-    FString ModelA_Path = "Models/policy_v1.onnx";
+    FString ModelA_Path = "Models/policy_v1.pt";
 
     UPROPERTY(EditAnywhere)
-    FString ModelB_Path = "Models/policy_v2.onnx";
+    FString ModelB_Path = "Models/policy_v2.pt";
 
     UFUNCTION(BlueprintCallable)
     FString SelectModelForPlayer(const FString& PlayerID);
@@ -1995,7 +2121,8 @@ public:
 ```
 
 **Analytics Collection**
-```python
+
+```cpp
 # Backend analytics service
 class MARLAnalytics:
     def record_match(self, player_id, model_version, result):
@@ -2024,6 +2151,7 @@ class MARLAnalytics:
 ### 10.5 Monitoring & Maintenance
 
 **Inference Performance Monitoring**
+
 ```cpp
 // Log inference latency
 float StartTime = FPlatformTime::Seconds();
@@ -2037,22 +2165,23 @@ SendAnalyticsEvent("inference_latency", {{"latency_ms", Latency}});
 ```
 
 **Model Update Pipeline**
+
 ```bash
 # Continuous training pipeline
 while true; do
-    # Train new model
-    python train.py --env twin_stick --steps 10M
+ # Train new model
+ ./marl_trainer --env twin_stick --steps 10M
 
-    # Evaluate against current best
-    python evaluate.py --model new_model.onnx --baseline best_model.onnx
+ # Evaluate against current best
+ ./marl_evaluator --model new_model.pt --baseline best_model.pt
 
-    # If better, deploy to A/B test
-    if [ $? -eq 0 ]; then
-        aws s3 cp new_model.onnx s3://marlgame-models/candidate_model.onnx
-        trigger_ab_test --model-a best_model.onnx --model-b candidate_model.onnx
-    fi
+ # If better, deploy to A/B test
+ if [ $? -eq 0 ]; then
+     aws s3 cp new_model.pt s3://marlgame-models/candidate_model.pt
+     trigger_ab_test --model-a best_model.pt --model-b candidate_model.pt
+ fi
 
-    sleep 86400  # Daily training
+ sleep 86400  # Daily training
 done
 ```
 
@@ -2063,34 +2192,32 @@ done
 ### 11.1 Academic Papers
 
 **Core MARL Algorithms**
+
 1. **PPO:** Schulman et al. (2017). "Proximal Policy Optimization Algorithms"
 2. **MADDPG:** Lowe et al. (2017). "Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments"
 3. **QMIX:** Rashid et al. (2018). "QMIX: Monotonic Value Function Factorisation for Decentralised Multi-Agent Reinforcement Learning"
 4. **MAPPO:** Yu et al. (2021). "The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games"
 
-**Communication & Coordination**
-5. **CommNet:** Sukhbaatar et al. (2016). "Learning Multiagent Communication with Backpropagation"
-6. **TarMAC:** Das et al. (2019). "TarMAC: Targeted Multi-Agent Communication"
-7. **I2C:** Ding et al. (2020). "Learning Individually Inferred Communication for Multi-Agent Cooperation"
+**Communication & Coordination** 5. **CommNet:** Sukhbaatar et al. (2016). "Learning Multiagent Communication with Backpropagation" 6. **TarMAC:** Das et al. (2019). "TarMAC: Targeted Multi-Agent Communication" 7. **I2C:** Ding et al. (2020). "Learning Individually Inferred Communication for Multi-Agent Cooperation"
 
-**Advanced Topics**
-8. **AlphaStar:** Vinyals et al. (2019). "Grandmaster level in StarCraft II using multi-agent reinforcement learning"
-9. **Hide and Seek:** Baker et al. (2020). "Emergent Tool Use From Multi-Agent Autocurricula"
-10. **FTW:** Jaderberg et al. (2019). "Human-level performance in 3D multiplayer games with population-based reinforcement learning"
+**Advanced Topics** 8. **AlphaStar:** Vinyals et al. (2019). "Grandmaster level in StarCraft II using multi-agent reinforcement learning" 9. **Hide and Seek:** Baker et al. (2020). "Emergent Tool Use From Multi-Agent Autocurricula" 10. **FTW:** Jaderberg et al. (2019). "Human-level performance in 3D multiplayer games with population-based reinforcement learning"
 
 ### 11.2 Online Resources
 
 **Tutorials & Courses**
+
 - [Spinning Up in Deep RL (OpenAI)](https://spinningup.openai.com)
 - [Multi-Agent RL Course (UCL)](http://www.cs.ox.ac.uk/people/shimon.whiteson/pubs/albrecht20oxford.pdf)
 - [PettingZoo Documentation](https://pettingzoo.farama.org/)
 
 **Codebases**
+
 - [Ray RLlib Examples](https://github.com/ray-project/ray/tree/master/rllib/examples)
 - [EPyMARL](https://github.com/uoe-agents/epymarl) - PyMARL extensions
 - [MARLlib](https://github.com/Replicable-MARL/MARLlib) - Comprehensive MARL library
 
 **Unreal Engine**
+
 - [UE5 C++ Programming Guide](https://docs.unrealengine.com/5.7/en-US/programming-with-cplusplus-in-unreal-engine/)
 - [UE5 Networking](https://docs.unrealengine.com/5.7/en-US/networking-overview-for-unreal-engine/)
 - [UE Neural Network Engine (NNE)](https://docs.unrealengine.com/5.7/en-US/neural-network-engine-in-unreal-engine/)
@@ -2098,32 +2225,38 @@ done
 ### 11.3 Tools & Libraries
 
 **RL Frameworks**
+
 - [Ray RLlib](https://docs.ray.io/en/latest/rllib/index.html)
 - [Stable Baselines3](https://stable-baselines3.readthedocs.io/)
 - [CleanRL](https://github.com/vwxyzjn/cleanrl)
 
 **Environment Wrappers**
+
 - [Gymnasium](https://gymnasium.farama.org/)
 - [PettingZoo](https://pettingzoo.farama.org/)
 
 **Logging & Visualization**
+
 - [TensorBoard](https://www.tensorflow.org/tensorboard)
 - [Weights & Biases](https://wandb.ai/)
 - [MLflow](https://mlflow.org/)
 
 **Model Deployment**
-- [ONNX Runtime](https://onnxruntime.ai/)
+
+- [LibTorch Runtime](https://pytorch.org/cppdocs/)
 - [TensorRT](https://developer.nvidia.com/tensorrt)
 - [OpenVINO](https://docs.openvino.ai/)
 
 ### 11.4 Community & Support
 
 **Forums & Discussions**
+
 - [Unreal Slackers Discord](https://unrealslackers.org/)
 - [r/reinforcementlearning](https://www.reddit.com/r/reinforcementlearning/)
 - [Ray Community Slack](https://forms.gle/9TSdDYUgxYs8SA9e8)
 
 **Research Groups**
+
 - [DeepMind](https://deepmind.com/)
 - [OpenAI](https://openai.com/)
 - [Berkeley AI Research (BAIR)](https://bair.berkeley.edu/)
@@ -2136,6 +2269,7 @@ done
 ### Appendix A: Code Examples
 
 **Example 1: Basic MARL Agent Component**
+
 ```cpp
 // MARLAgentComponent.h (Simplified)
 #pragma once
@@ -2183,90 +2317,95 @@ private:
 };
 ```
 
-**Example 2: Python Training Script**
-```python
-# train_twin_stick.py
-import torch
-from marl_framework.environments.unreal_env import UnrealMARLEnv
-from marl_framework.algorithms.mappo import MAPPO
-import wandb
+**Example 2: C++ Training Script**
 
-def main():
-    # Initialize environment
-    env = UnrealMARLEnv(
-        host='localhost',
-        port=9876,
-        num_agents=4,
-        variant='twin_stick'
-    )
+```cpp
+// main.cpp
+#include "environments/unreal_env.h"
+#include "algorithms/mappo.h"
+#include "utils/logger.h"
+#include <torch/torch.h>
 
-    # Initialize algorithm
-    mappo = MAPPO(
-        observation_space=env.observation_space,
-        action_space=env.action_space,
-        num_agents=env.num_agents,
-        hidden_size=256,
-        num_layers=2,
-        lr=3e-4,
-        gamma=0.99,
-        gae_lambda=0.95
-    )
+int main() {
+    // Initialize environment
+    UnrealMARLEnv env(true, 9876, 4, "twin_stick");
 
-    # Initialize logging
-    wandb.init(project='marlgame', name='twin_stick_mappo')
+    // Initialize algorithm
+    MAPPO mappo(
+        env.observation_space(),
+        env.action_space(),
+        env.num_agents(),
+        256,   // hidden_size
+        2,     // num_layers
+        3e-4,  // lr
+        0.99,  // gamma
+        0.95   // gae_lambda
+    );
 
-    # Training loop
-    for episode in range(10000):
-        obs = env.reset()
-        episode_reward = {agent: 0 for agent in env.agents}
-        done = False
+    // Initialize logging
+    Logger logger("marlgame", "twin_stick_mappo");
 
-        while not done:
-            # Get actions from policy
-            actions = mappo.get_actions(obs)
+    // Training loop
+    for (int episode = 0; episode < 10000; episode++) {
+        auto obs = env.reset();
+        std::map<std::string, float> episode_reward;
+        bool done = false;
 
-            # Step environment
-            next_obs, rewards, dones, truncated, info = env.step(actions)
+        while (!done) {
+            // Get actions from policy
+            auto actions = mappo.get_actions(obs);
 
-            # Store transition
-            mappo.store_transition(obs, actions, rewards, next_obs, dones)
+            // Step environment
+            auto [next_obs, rewards, dones] = env.step(actions);
 
-            # Update rewards
-            for agent in env.agents:
-                episode_reward[agent] += rewards[agent]
+            // Store transition
+            mappo.store_transition(obs, actions, rewards, next_obs, dones);
 
-            obs = next_obs
-            done = dones['__all__']
+            // Update rewards
+            for (const auto& agent : env.agents()) {
+                episode_reward[agent] += rewards[agent];
+            }
 
-        # Update policy
-        losses = mappo.update()
+            obs = std::move(next_obs);
+            done = dones["__all__"];
+        }
 
-        # Log metrics
-        wandb.log({
-            'episode': episode,
-            'avg_reward': sum(episode_reward.values()) / len(episode_reward),
-            'policy_loss': losses['policy_loss'],
-            'value_loss': losses['value_loss']
-        })
+        // Update policy
+        auto losses = mappo.update();
 
-        # Save checkpoint
-        if episode % 100 == 0:
-            torch.save(mappo.state_dict(), f'checkpoints/mappo_{episode}.pth')
+        // Log metrics
+        float avg_reward = 0;
+        for (const auto& [agent, rew] : episode_reward) avg_reward += rew;
+        avg_reward /= env.num_agents();
 
-if __name__ == '__main__':
-    main()
+        logger.log({
+            {"episode", float(episode)},
+            {"avg_reward", avg_reward},
+            {"policy_loss", losses["policy_loss"]},
+            {"value_loss", losses["value_loss"]}
+        });
+
+        // Save checkpoint
+        if (episode % 100 == 0) {
+            torch::save(mappo, "checkpoints/mappo_" + std::to_string(episode) + ".pt");
+        }
+    }
+
+    return 0;
+}
 ```
 
 ### Appendix B: Configuration Examples
 
 **MARL Config (YAML)**
+
 ```yaml
 # configs/twin_stick_mappo.yaml
 environment:
   name: twin_stick
   num_agents: 4
   max_episode_steps: 3000
-  observation_type: vector  # vector, image, or hybrid
+  observation_type: vector # vector, image, or hybrid
   action_space: discrete
 
   reset_config:
@@ -2332,15 +2471,16 @@ logging:
 
 **Target Performance Metrics**
 
-| Configuration | FPS | Latency (ms) | Memory (GB) | Throughput (steps/s) |
-|---------------|-----|--------------|-------------|----------------------|
-| Single instance, 4 agents | 60 | 16 | 4 | 240 |
-| Single instance, 10 agents | 45 | 22 | 6 | 450 |
-| 8 parallel instances, 4 agents each | 60 | 16 | 32 | 1920 |
-| ONNX inference (local) | 120 | 8 | 2 | N/A |
-| Remote inference (gRPC) | 60 | 45 | 1 | N/A |
+| Configuration                       | FPS | Latency (ms) | Memory (GB) | Throughput (steps/s) |
+| ----------------------------------- | --- | ------------ | ----------- | -------------------- |
+| Single instance, 4 agents           | 60  | 16           | 4           | 240                  |
+| Single instance, 10 agents          | 45  | 22           | 6           | 450                  |
+| 8 parallel instances, 4 agents each | 60  | 16           | 32          | 1920                 |
+| TorchScript inference (local)       | 120 | 8            | 2           | N/A                  |
+| Remote inference (gRPC)             | 60  | 45           | 1           | N/A                  |
 
 **Optimization Techniques Applied**
+
 - Object pooling for projectiles and effects
 - Spatial hashing for neighbor queries
 - Batched raycasts
@@ -2360,12 +2500,14 @@ This comprehensive plan provides a roadmap for implementing multi-agent reinforc
 4. **Scalability:** Architecture designed for production deployment
 
 **Next Steps:**
+
 1. Review and approve this plan
 2. Assemble the team
 3. Set up development environment and infrastructure
 4. Begin Phase 1: Foundation & Architecture
 
 **Success will be measured by:**
+
 - Training convergence on both game variants
 - Emergent cooperative/competitive behaviors
 - Real-time inference performance (<50ms)
@@ -2378,10 +2520,10 @@ For questions or clarifications, please contact the project team.
 
 **Document Control**
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-28 | MARL Team | Initial comprehensive plan |
+| Version | Date       | Author    | Changes                    |
+| ------- | ---------- | --------- | -------------------------- |
+| 1.0     | 2026-02-28 | MARL Team | Initial comprehensive plan |
 
 ---
 
-*End of Document*
+_End of Document_
