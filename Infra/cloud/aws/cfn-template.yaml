@@ -7,7 +7,7 @@ Description: Serverless Backend stack for the MARL Game.
 
 Resources:
   # DynamoDB Database Table
-  Marl_gameTable:
+  MarlGameTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
       PrimaryKey:
@@ -18,7 +18,7 @@ Resources:
         WriteCapacityUnits: 5
 
   # Lambda Function
-  Marl_gameFunction:
+  MarlGameFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: handler.lambda_handler
@@ -26,10 +26,10 @@ Resources:
       CodeUri: ./src
       Environment:
         Variables:
-          TABLE_NAME: !Ref Marl_gameTable
+          TABLE_NAME: !Ref MarlGameTable
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref Marl_gameTable
+            TableName: !Ref MarlGameTable
       Events:
         ApiEvent:
           Type: Api
