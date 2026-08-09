@@ -3,8 +3,8 @@ version: '3.8'
 services:
   marltrainer:
     build:
-      context: ..
-      dockerfile: Docker/Dockerfile.Trainer
+      context: ../../..
+      dockerfile: Infra/global/Docker/Dockerfile.Trainer
     environment:
       - MARLC_ENV_HOST=marlserver
       - MARLC_ENV_PORT=7000
@@ -22,8 +22,8 @@ services:
 
   marlserver:
     build:
-      context: ..
-      dockerfile: Docker/Dockerfile.UE
+      context: ../../..
+      dockerfile: Infra/global/Docker/Dockerfile.UE
     environment:
       - PORT=7000
     command: ["-Port=7000"]
